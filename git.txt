@@ -1,0 +1,19 @@
+# 1. Make changes to your files (e.g., edit `index.html`)
+
+# 2. Check what changed
+git status
+
+# 3. Add all changes
+git add .
+
+# 4. Commit
+git commit -m "Updated homepage design"
+
+# 5. Push to GitHub
+git push origin main
+
+
+Branch not found?
+If GitHub uses main but your local branch is master:
+git branch -M main    # Rename branch
+git push -u origin main
