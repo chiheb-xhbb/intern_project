@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('numero_compte')->unique();
             $table->enum('type_compte', ['Compte courant', 'Compte épargne', 'Compte professionnel', 'Compte joint']);
             $table->date('date_ouverture')->nullable();
-            $table->timestamps();
+           
 
             $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');
         });

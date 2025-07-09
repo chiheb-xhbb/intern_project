@@ -5,11 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class Clients extends Model
+class Client extends Model
 {
     use HasFactory;
 
-    protected $table = 'clients';
     public $timestamps = false;
 
     protected $fillable = [
@@ -20,18 +19,18 @@ class Clients extends Model
         'segment_client',
     ];
 
-    public function personnes()
+    public function personne()
     {
-        return $this->belongsTo(Personnes::class, 'id');
+        return $this->belongsTo(Personne::class, 'id');
     }
 
     public function comptes()
     {
-        return $this->hasMany(ComptesBancaires::class);
+        return $this->hasMany(CompteBancaire::class, 'client_id');
     }
 
     public function reclamations()
     {
-        return $this->hasMany(Reclamations::class);
+        return $this->hasMany(Reclamation::class, 'client_id');
     }
 }

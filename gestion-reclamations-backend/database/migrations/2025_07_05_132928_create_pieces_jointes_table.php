@@ -17,9 +17,9 @@ return new class extends Migration
             $table->string('fichier_url');
             $table->string('description')->nullable();
             $table->float('taille_fichier');
-            $table->enum('type_fichier', ['PDF', 'JPEG', 'PNG', 'DOC', 'Autre'])->default('Autre');
+            $table->enum('type_fichier', ['PDF', 'JPEG', 'PNG', 'DOC', 'Autre'])->default('JPEG');
             $table->dateTime('uploaded_at')->default(now());
-            $table->timestamps();
+  
 
             $table->foreign('reclamation_id')->references('id')->on('reclamations')->onDelete('cascade');
         });

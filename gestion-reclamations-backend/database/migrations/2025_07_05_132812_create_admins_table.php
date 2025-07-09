@@ -15,7 +15,7 @@ return new class extends Migration
             $table->unsignedBigInteger('id')->primary();
             $table->string('agence')->nullable();
             $table->dateTime('last_login')->nullable();
-            $table->timestamps();
+            
 
             $table->foreign('id')->references('id')->on('personnes')->onDelete('cascade');
         });
