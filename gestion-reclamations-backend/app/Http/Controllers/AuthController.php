@@ -43,7 +43,8 @@ class AuthController extends Controller
                 'numero_client' => $request->numero_client,
                 'adresse' => $request->adresse,
                 'date_naissance' => $request->date_naissance,
-                'segment_client' => 'Particulier' // Default value
+                'segment_client' => 'Particulier', // Default value
+                'created_at' => now()
             ]);
 
             // Generate token
