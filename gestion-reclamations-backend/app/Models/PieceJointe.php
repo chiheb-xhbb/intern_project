@@ -10,6 +10,7 @@ class PieceJointe extends Model
     use HasFactory;
 
     public $timestamps = false;
+    protected $table = 'pieces_jointes';
 
     protected $fillable = [
         'reclamation_id',
