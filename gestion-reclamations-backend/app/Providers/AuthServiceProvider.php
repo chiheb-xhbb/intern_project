@@ -2,23 +2,35 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
+use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use App\Models\Reclamation;
+use App\Models\Client;
+use App\Policies\ReclamationPolicy;
+use App\Policies\ClientPolicy;
+use Illuminate\Support\Facades\Gate;
+
 
 class AuthServiceProvider extends ServiceProvider
 {
     /**
-     * Register services.
+     * The policy mappings for the application.
      */
-    public function register(): void
-    {
-        //
-    }
+    protected $policies = [
+        Reclamation::class => ReclamationPolicy::class,
+        Client::class => ClientPolicy::class,
+    ];
 
     /**
-     * Bootstrap services.
+     * Register any authentication / authorization services.
      */
-    public function boot(): void
+    public function boot()
     {
-        //
+        $this->registerPolicies();
+
+    Gate::define('viewClientReclamations', function ($user, $client) {
+        return $user->id === $client->id;
+    });
+
+
     }
 }

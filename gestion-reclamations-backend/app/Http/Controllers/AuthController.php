@@ -66,7 +66,6 @@ class AuthController extends Controller
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
-            'device_name' => 'required'
         ]);
 
         $personne = Personne::where('email', $request->email)->first();
@@ -77,15 +76,18 @@ class AuthController extends Controller
             ], 401);
         }
 
+        $deviceName = 'web-client'; // Default device name
+
         // Update last login if admin
         if ($personne->admin) {
             $personne->admin->update(['last_login' => now()]);
         }
 
         // Revoke old tokens
-        $personne->tokens()->where('name', $request->device_name)->delete();
+        $personne->tokens()->where('name', $deviceName)->delete();
 
-        $token = $personne->createToken($request->device_name)->plainTextToken;
+        // Generate new token
+        $token = $personne->createToken($deviceName)->plainTextToken;
 
         return response()->json([
             'access_token' => $token,
@@ -93,6 +95,7 @@ class AuthController extends Controller
             'user' => $personne->load(['client', 'admin'])
         ]);
     }
+
 
     /**
      * Get authenticated user

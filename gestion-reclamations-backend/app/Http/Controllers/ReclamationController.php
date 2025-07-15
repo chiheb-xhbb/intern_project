@@ -8,15 +8,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class ReclamationController extends Controller
 {
+    use AuthorizesRequests;
+
     /**
      * Get all reclamations (Admin only)
      */
     public function index(Request $request)
     {
-        //Gate::authorize('viewAny', Reclamation::class);
+        $this->authorize('viewAny', Reclamation::class);
+
 
         $query = Reclamation::with(['client.personne', 'piecesJointes', 'historiques.admin.personne'])
             ->orderBy('date_reception', 'desc');
@@ -32,7 +36,7 @@ class ReclamationController extends Controller
     public function clientReclamations(Request $request)
     {
         $client = $request->user()->client;
-        //Gate::authorize('viewClientReclamations', $client);
+        Gate::authorize('viewClientReclamations', $client);
 
         return response()->json([
             'data' => $client->reclamations()
@@ -47,6 +51,8 @@ class ReclamationController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create', Reclamation::class);
+
         $validated = $request->validate([
             'client_id' => 'required|exists:clients,id',
             'type_reclamation' => [
@@ -83,7 +89,7 @@ class ReclamationController extends Controller
      */
     public function show(Reclamation $reclamation)
     {
-        //Gate::authorize('view', $reclamation);
+        Gate::authorize('view', $reclamation);
 
         return response()->json([
             'reclamation' => $reclamation->load([
@@ -100,7 +106,7 @@ class ReclamationController extends Controller
      */
     public function updateStatus(Request $request, Reclamation $reclamation)
     {
-        //Gate::authorize('update', $reclamation);
+        Gate::authorize('update', $reclamation);
 
         $validated = $request->validate([
             'statut' => [
@@ -141,7 +147,7 @@ class ReclamationController extends Controller
      */
     public function destroy(Reclamation $reclamation)
     {
-        //Gate::authorize('delete', $reclamation);
+        Gate::authorize('delete', $reclamation);
 
         $reclamation->delete();
 
