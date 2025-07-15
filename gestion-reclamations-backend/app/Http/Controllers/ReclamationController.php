@@ -53,26 +53,32 @@ class ReclamationController extends Controller
     {
         $this->authorize('create', Reclamation::class);
 
-        $validated = $request->validate([
-            'client_id' => 'required|exists:clients,id',
+        $user = $request->user();
+
+        $rules = [
             'type_reclamation' => [
                 'required',
-                Rule::in(['Carte bloquée', 'Erreur de virement', 'Retard crédit', 'Autre'])
+                Rule::in(['Carte bloquée', 'Erreur de virement', 'Retard crédit', 'Autre']),
             ],
             'canal' => [
                 'nullable',
-                Rule::in(['email', 'téléphone', 'agence', 'application_web'])
+                Rule::in(['email', 'téléphone', 'agence', 'application_web']),
             ],
-
             'description' => 'required|string|max:1000',
-        ]);
-        $validated['canal'] = $validated['canal'] ?? 'application_web';
+        ];
+
+        // Si l'utilisateur est un admin, il DOIT spécifier le client concerné
+        if ($user->admin) {
+            $rules['client_id'] = 'required|exists:clients,id';
+        }
+
+        $validated = $request->validate($rules);
 
         $reclamation = Reclamation::create([
-            'client_id' => $validated['client_id'],
-            'admin_id' => $request->user()->admin ? $request->user()->id : null,
+            'client_id' => $user->admin ? $validated['client_id'] : $user->client->id,
+            'admin_id' => $user->admin ? $user->admin->id : null,
             'type_reclamation' => $validated['type_reclamation'],
-            'canal' => $validated['canal'],
+            'canal' => $validated['canal'] ?? 'application_web',
             'description' => $validated['description'],
             'date_reception' => now(),
             'statut' => 'en attente',
@@ -80,9 +86,10 @@ class ReclamationController extends Controller
 
         return response()->json([
             'message' => 'Réclamation créée avec succès',
-            'reclamation' => $reclamation->load(['client.personne'])
+            'reclamation' => $reclamation->load(['client.personne']),
         ], 201);
     }
+
 
     /**
      * Get specific reclamation details
