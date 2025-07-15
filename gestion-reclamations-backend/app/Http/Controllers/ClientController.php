@@ -18,13 +18,16 @@ class ClientController extends Controller
     {
         Gate::authorize('viewAny', Client::class);
 
-        $query = Client::with('personne')
-            ->orderBy('created_at', 'desc');
+        $clients = Client::with('personne')
+            ->get()
+            ->sortByDesc(fn($client) => $client->personne->created_at)
+            ->values();
 
         return response()->json([
-            'data' => $query->paginate(15)
+            'data' => $clients
         ]);
     }
+
 
     /**
      * Get client details

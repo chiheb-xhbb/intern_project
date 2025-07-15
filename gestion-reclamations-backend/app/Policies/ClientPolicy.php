@@ -7,8 +7,14 @@ use App\Models\Personne;
 use App\Models\User;
 class ClientPolicy
 {
-    public function viewClientReclamations(Personne $user, Client $client)
+    public function viewClientReclamations(\App\Models\Personne $user, \App\Models\Client $client)
     {
-        return $user->client_id === $client->id;
+        return $user->id === $client->id;
     }
+    public function viewAny(\App\Models\Personne $user)
+    {
+        return $user->admin !== null; // Only allow admins
+    }
+
+
 }

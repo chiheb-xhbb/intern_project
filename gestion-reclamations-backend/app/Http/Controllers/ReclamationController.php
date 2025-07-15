@@ -36,6 +36,10 @@ class ReclamationController extends Controller
     public function clientReclamations(Request $request)
     {
         $client = $request->user()->client;
+        if (!$client) {
+            return response()->json(['message' => 'Vous n\'êtes pas un client.'], 403);
+        }
+
         Gate::authorize('viewClientReclamations', $client);
 
         return response()->json([
