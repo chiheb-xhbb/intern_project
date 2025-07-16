@@ -10,6 +10,7 @@ class CompteBancaire extends Model
     use HasFactory;
 
     public $timestamps = false;
+    protected $table = 'comptes_bancaires';
 
     protected $fillable = [
         'client_id',

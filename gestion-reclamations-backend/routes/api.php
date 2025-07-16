@@ -13,37 +13,38 @@ Route::get('/test-api', function () {
 });
 
 // AUTH
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login']);//done
 
 // Routes protégées
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/me', [AuthController::class, 'me']);
-    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/me', [AuthController::class, 'me']);//done
+    Route::post('/logout', [AuthController::class, 'logout']);//done
     Route::post('/change-password', [AuthController::class, 'changePassword']);
 
     // Clients
-    Route::get('/clients', [ClientController::class, 'index']);
+    Route::get('/clients', [ClientController::class, 'index']);//done
     Route::get('/clients/{client}', [ClientController::class, 'show']);
     Route::put('/clients/{client}', [ClientController::class, 'update']);
     Route::get('/clients/{client}/comptes', [ClientController::class, 'comptes']);
     Route::get('/clients/{client}/reclamations', [ClientController::class, 'reclamations']);
 
     // Réclamations
-    Route::get('/reclamations', [ReclamationController::class, 'index']);
-    Route::get('/reclamations/mine', [ReclamationController::class, 'clientReclamations']);
-    Route::post('/reclamations', [ReclamationController::class, 'store']);
-    Route::get('/reclamations/{reclamation}', [ReclamationController::class, 'show']);
+    Route::get('/reclamations', [ReclamationController::class, 'index']);//done
+    Route::get('/reclamations/mine', [ReclamationController::class, 'clientReclamations']);//done
+    Route::post('/reclamations', [ReclamationController::class, 'store']);//done
+    Route::get('/reclamations/{reclamation}', [ReclamationController::class, 'show']);//done
     Route::put('/reclamations/{reclamation}/statut', [ReclamationController::class, 'updateStatus']);
     Route::delete('/reclamations/{reclamation}', [ReclamationController::class, 'destroy']);
 
     // Admin
+    Route::post('/register', [AdminController::class, 'register']);//done
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard']);
     Route::get('/admin/pending', [AdminController::class, 'pendingReclamations']);
     Route::put('/admin/reclamations/{reclamation}', [AdminController::class, 'updateReclamation']);
 
     // Comptes bancaires
-    Route::get('/comptes', [CompteBancaireController::class, 'index']);
+    Route::post('/comptes', [CompteBancaireController::class, 'store']);//done
+    Route::get('/comptes', [CompteBancaireController::class, 'index']);//done
     Route::get('/comptes/{compte}', [CompteBancaireController::class, 'show']);
     Route::get('/comptes/search', [CompteBancaireController::class, 'search']);
 

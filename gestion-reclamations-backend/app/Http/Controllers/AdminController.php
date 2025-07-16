@@ -1,12 +1,17 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use Illuminate\Validation\Rules\Password;
 use App\Models\Reclamation;
 use App\Models\HistoriqueReclamation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use App\Models\Client;
+use App\Models\Personne;
+use Illuminate\Support\Facades\Hash;
+
+
 
 class AdminController extends Controller
 {
@@ -97,4 +102,51 @@ class AdminController extends Controller
             ]);
         });
     }
+
+    /**
+     * Register a new CLIENT
+     */
+    public function register(Request $request)
+    {
+        // Autorisation : seul un admin peut créer un client
+        if (!$request->user() || !$request->user()->admin) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'nom' => 'required|string|max:255',
+            'prenom' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:personnes',
+            'telephone' => 'nullable|string|max:20',
+            'mot_de_passe' => ['required', Password::defaults()],
+            'numero_client' => 'required|string|max:50|unique:clients',
+            'adresse' => 'nullable|string|max:255',
+            'date_naissance' => 'nullable|date',
+        ]);
+
+        return DB::transaction(function () use ($request) {
+            $personne = Personne::create([
+                'nom' => $request->nom,
+                'prenom' => $request->prenom,
+                'email' => $request->email,
+                'telephone' => $request->telephone,
+                'mot_de_passe' => Hash::make($request->mot_de_passe),
+            ]);
+
+            Client::create([
+                'id' => $personne->id,
+                'numero_client' => $request->numero_client,
+                'adresse' => $request->adresse,
+                'date_naissance' => $request->date_naissance,
+                'segment_client' => 'Particulier',
+                'created_at' => now()
+            ]);
+
+            return response()->json([
+                'message' => 'Client créé avec succès',
+                'client' => $personne->load('client')
+            ], 201);
+        });
+    }
+
 }

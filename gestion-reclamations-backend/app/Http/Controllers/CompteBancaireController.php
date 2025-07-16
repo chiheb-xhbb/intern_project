@@ -18,7 +18,7 @@ class CompteBancaireController extends Controller
         if ($request->user()->client) {
             return response()->json([
                 'data' => $request->user()->client->comptes()
-                    ->orderBy('created_at', 'desc')
+                    ->orderBy('date_ouverture', 'desc')
                     ->get()
             ]);
         }
@@ -87,4 +87,33 @@ class CompteBancaireController extends Controller
                 ];
             });
     }
+
+    /**
+     * Créer un nouveau compte bancaire
+     */
+    // Autorisation : seul un admin peut créer un compte
+    public function store(Request $request)
+    {
+        $request->validate([
+            'client_id' => 'required|exists:clients,id',
+            'numero_compte' => 'required|string|max:50|unique:comptes_bancaires',
+            'type_compte' => 'required|in:Compte courant,Compte épargne,Compte professionnel,Compte joint',
+            'date_ouverture' => 'nullable|date'
+        ]);
+
+        $compte = CompteBancaire::create([
+            'client_id' => $request->client_id,
+            'numero_compte' => $request->numero_compte,
+            'type_compte' => $request->type_compte,
+            'date_ouverture' => $request->date_ouverture // Add this line
+        ]);
+
+        return response()->json([
+            'message' => 'Compte bancaire créé avec succès',
+            'compte' => $compte->load('client.personne')
+        ], 201);
+    }
+    
+
+
 }

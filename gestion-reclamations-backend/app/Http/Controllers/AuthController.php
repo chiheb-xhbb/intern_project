@@ -11,52 +11,7 @@ use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
-    /**
-     * Register a new CLIENT only
-     */
-    public function register(Request $request)
-    {
-        $request->validate([
-            'nom' => 'required|string|max:255',
-            'prenom' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:personnes',
-            'telephone' => 'nullable|string|max:20',
-            'mot_de_passe' => ['required', Rules\Password::defaults()],
-            'numero_client' => 'required|string|max:50|unique:clients',
-            'adresse' => 'nullable|string|max:255',
-            'date_naissance' => 'nullable|date',
-        ]);
-
-        return DB::transaction(function () use ($request) {
-            // Create Personne
-            $personne = Personne::create([
-                'nom' => $request->nom,
-                'prenom' => $request->prenom,
-                'email' => $request->email,
-                'telephone' => $request->telephone,
-                'mot_de_passe' => Hash::make($request->mot_de_passe),
-            ]);
-
-            // Create Client record
-            Client::create([
-                'id' => $personne->id,
-                'numero_client' => $request->numero_client,
-                'adresse' => $request->adresse,
-                'date_naissance' => $request->date_naissance,
-                'segment_client' => 'Particulier', // Default value
-                'created_at' => now()
-            ]);
-
-            // Generate token
-            $token = $personne->createToken('auth_token')->plainTextToken;
-
-            return response()->json([
-                'access_token' => $token,
-                'token_type' => 'Bearer',
-                'user' => $personne->load('client')
-            ], 201);
-        });
-    }
+    
 
     /**
      * Handle login
