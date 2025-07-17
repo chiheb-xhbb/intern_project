@@ -12,6 +12,7 @@ class Reclamation extends Model
     protected $fillable = [
         'client_id',
         'admin_id',
+        'compte_bancaire_id',
         'type_reclamation',
         'canal',
         'description',
@@ -39,4 +40,11 @@ class Reclamation extends Model
     {
         return $this->hasMany(HistoriqueReclamation::class, 'reclamation_id');
     }
+
+    public function compteBancaire()
+    {
+        return $this->belongsTo(CompteBancaire::class);
+    }
+
+    
 }

@@ -44,20 +44,57 @@ class CompteBancaireController extends Controller
     {
         Gate::authorize('view', $compteBancaire);
 
+        $client = $compteBancaire->client;
+        $personne = $client ? $client->personne : null;
+
         return response()->json([
             'compte' => $compteBancaire->only([
-                'id', 
+                'id',
+                'client_id', 
                 'numero_compte',
                 'type_compte',
                 'date_ouverture'
             ]),
-            'client' => $compteBancaire->client->personne->only([
-                'nom',
-                'prenom',
-                'numero_client'
-            ])
+            'client' => $client ? array_merge(
+                $personne ? $personne->only(['nom', 'prenom']) : [],
+                ['numero_client' => $client->numero_client ?? null]
+            ) : null
         ]);
     }
+
+
+
+    /**
+     * Détails d'un compte par client ID (pour association avec réclamation)
+     */
+    public function showByClient($client_id)
+{
+    // Fetch the compte by client_id (you can use first() or get() for multiple)
+    $compteBancaire = CompteBancaire::where('client_id', $client_id)->first();
+
+    if (!$compteBancaire) {
+        return response()->json(['message' => 'Compte bancaire non trouvé'], 404);
+    }
+
+    Gate::authorize('view', $compteBancaire);
+
+    $client = $compteBancaire->client;
+    $personne = $client ? $client->personne : null;
+
+    return response()->json([
+        'compte' => $compteBancaire->only([
+            'id',
+            'client_id', 
+            'numero_compte',
+            'type_compte',
+            'date_ouverture'
+        ]),
+        'client' => $client ? array_merge(
+            $personne ? $personne->only(['nom', 'prenom']) : [],
+            ['numero_client' => $client->numero_client ?? null]
+        ) : null
+    ]);
+}
 
     /**
      * Recherche de comptes (pour association avec réclamation)

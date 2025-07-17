@@ -25,7 +25,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/clients', [ClientController::class, 'index']);//done
     Route::get('/clients/{client}', [ClientController::class, 'show']);
     Route::put('/clients/{client}', [ClientController::class, 'update']);
-    Route::get('/clients/{client}/comptes', [ClientController::class, 'comptes']);
+    Route::get('/clients/{client}/comptes', [ClientController::class, 'comptes']);//done
     Route::get('/clients/{client}/reclamations', [ClientController::class, 'reclamations']);
 
     // Réclamations
@@ -45,7 +45,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Comptes bancaires
     Route::post('/comptes', [CompteBancaireController::class, 'store']);//done
     Route::get('/comptes', [CompteBancaireController::class, 'index']);//done
-    Route::get('/comptes/{compte}', [CompteBancaireController::class, 'show']);
+    Route::get('/comptes/{compteBancaire}', [CompteBancaireController::class, 'show']);//done
+    Route::get('/comptes/client/{client_id}', [CompteBancaireController::class, 'showByClient']);//done
     Route::get('/comptes/search', [CompteBancaireController::class, 'search']);
 
     // Pièces jointes

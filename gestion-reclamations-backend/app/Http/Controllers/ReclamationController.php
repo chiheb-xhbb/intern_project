@@ -60,6 +60,7 @@ class ReclamationController extends Controller
         $user = $request->user();
 
         $rules = [
+            'compte_bancaire_id' => 'required|exists:comptes_bancaires,id',
             'type_reclamation' => [
                 'required',
                 Rule::in(['Carte bloquée', 'Erreur de virement', 'Retard crédit', 'Autre']),
@@ -69,6 +70,7 @@ class ReclamationController extends Controller
                 Rule::in(['email', 'téléphone', 'agence', 'application_web']),
             ],
             'description' => 'required|string|max:1000',
+            
         ];
 
         // Si l'utilisateur est un admin, il DOIT spécifier le client concerné
@@ -81,6 +83,7 @@ class ReclamationController extends Controller
         $reclamation = Reclamation::create([
             'client_id' => $user->admin ? $validated['client_id'] : $user->client->id,
             'admin_id' => $user->admin ? $user->admin->id : null,
+            'compte_bancaire_id' => $validated['compte_bancaire_id'],
             'type_reclamation' => $validated['type_reclamation'],
             'canal' => $validated['canal'] ?? 'application_web',
             'description' => $validated['description'],
