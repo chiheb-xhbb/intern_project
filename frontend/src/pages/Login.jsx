@@ -33,12 +33,9 @@ const Login = () => {
               style={{ borderRadius: "1rem" }}
             >
               <div className="card-body p-5 text-center">
-                <h3 className="mb-5">Sign in</h3>
+                <h3 className="mb-5">LOGIN</h3>
                 <form onSubmit={handleLogin}>
-                  <div className="mb-4 text-start">
-                    <label className="form-label" htmlFor="typeEmailX-2">
-                      Email
-                    </label>
+                  <div className="form-floating mb-4">
                     <input
                       type="email"
                       id="typeEmailX-2"
@@ -46,13 +43,11 @@ const Login = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      placeholder="Email"
+                      placeholder=" "
                     />
+                    <label htmlFor="typeEmailX-2">Email</label>
                   </div>
-                  <div className="mb-4 text-start">
-                    <label className="form-label" htmlFor="typePasswordX-2">
-                      Password
-                    </label>
+                  <div className="form-floating mb-4">
                     <input
                       type="password"
                       id="typePasswordX-2"
@@ -60,8 +55,9 @@ const Login = () => {
                       value={motDePasse}
                       onChange={(e) => setMotDePasse(e.target.value)}
                       required
-                      placeholder="Password"
+                      placeholder=" "
                     />
+                    <label htmlFor="typePasswordX-2">Password</label>
                   </div>
                   <div className="form-check d-flex justify-content-start mb-4">
                     <input
