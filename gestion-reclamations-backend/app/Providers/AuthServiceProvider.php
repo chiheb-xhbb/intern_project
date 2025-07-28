@@ -30,10 +30,13 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-    Gate::define('viewClientReclamations', function ($user, $client) {
-        return $user->id === $client->id;
-    });
+        Gate::define('viewClientReclamations', function ($user, $client) {
+            return $user->id === $client->id;
+        });
 
-
+        // Allow only admin users to access admin routes
+        Gate::define('admin-access', function ($user) {
+            return $user->admin !== null;
+        });
     }
 }
