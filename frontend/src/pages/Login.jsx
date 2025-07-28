@@ -16,15 +16,27 @@ const Login = () => {
         email,
         password: motDePasse,
       });
+      const user = response.data.user;
       localStorage.setItem("token", response.data.access_token);
-      navigate("/dashboard");
+      localStorage.setItem("user", JSON.stringify(user));
+      if (user.admin) {
+        navigate("/dashboard"); // page admin
+      } else if (user.client) {
+        navigate("/client-home"); // page client
+      } else {
+        setError("Aucun rôle associé.");
+      }
     } catch (err) {
       setError(err.response?.data?.message || "Échec de connexion");
     }
   };
 
   return (
-    <section className="vh-100" style={{ backgroundColor: "#508bfc" }}>
+    <section
+      className="vh-100"
+      style={{ backgroundColor: "#4e4949ff" }}
+      id="login-section"
+    >
       <div className="container py-5 h-100">
         <div className="row d-flex justify-content-center align-items-center h-100">
           <div className="col-12 col-md-8 col-lg-6 col-xl-5">
@@ -33,13 +45,21 @@ const Login = () => {
               style={{ borderRadius: "1rem" }}
             >
               <div className="card-body p-5 text-center">
-                <h3 className="mb-5">LOGIN</h3>
+                <img
+                  src="IMAGES/logo.png"
+                  alt="Company Logo"
+                  style={{
+                    width: "45%",
+                    objectFit: "contain",
+                    marginBottom: "2rem",
+                  }}
+                />
                 <form onSubmit={handleLogin}>
                   <div className="form-floating mb-4">
                     <input
                       type="email"
                       id="typeEmailX-2"
-                      className="form-control form-control-lg"
+                      className="form-control form-control"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -51,7 +71,7 @@ const Login = () => {
                     <input
                       type="password"
                       id="typePasswordX-2"
-                      className="form-control form-control-lg"
+                      className="form-control form-control"
                       value={motDePasse}
                       onChange={(e) => setMotDePasse(e.target.value)}
                       required
@@ -63,18 +83,15 @@ const Login = () => {
                     <input
                       className="form-check-input"
                       type="checkbox"
-                      value=""
-                      id="form1Example3"
+                      id="checkb1"
                     />
-                    <label
-                      className="form-check-label ms-2"
-                      htmlFor="form1Example3"
-                    >
+                    <label className="form-check-label ms-2" htmlFor="checkb1">
                       Remember password
                     </label>
                   </div>
                   {error && <div className="alert alert-danger">{error}</div>}
                   <button
+                    style={{ backgroundColor: "#ce1313ff" }}
                     className="btn btn-primary btn-lg btn-block w-100"
                     type="submit"
                   >
@@ -82,6 +99,7 @@ const Login = () => {
                   </button>
                   <hr className="my-4" />
                 </form>
+                
               </div>
             </div>
           </div>

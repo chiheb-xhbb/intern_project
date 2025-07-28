@@ -36,6 +36,7 @@ class ReclamationController extends Controller
     public function clientReclamations(Request $request)
     {
         $client = $request->user()->client;
+
         if (!$client) {
             return response()->json(['message' => 'Vous n\'êtes pas un client.'], 403);
         }
@@ -44,11 +45,16 @@ class ReclamationController extends Controller
 
         return response()->json([
             'data' => $client->reclamations()
-                ->with(['piecesJointes', 'historiques.admin.personne'])
+                ->with([
+                    'compteBancaire', 
+                    'piecesJointes',
+                    'historiques.admin.personne'
+                ])
                 ->orderBy('date_reception', 'desc')
                 ->paginate(10)
         ]);
     }
+
 
     /**
      * Create a new reclamation
