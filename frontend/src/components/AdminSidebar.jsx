@@ -22,7 +22,15 @@ const AdminSidebar = () => {
       <Navbar bg="light" expand={false} className="mb-4 shadow-sm">
         <Container fluid className="px-3 d-flex align-items-center">
           <Navbar.Toggle aria-controls="offcanvasNavbar" className="me-auto" />
-          <Navbar.Brand className="fw-bold ms-auto" href="#" style={{ color: '#ce1313ff' }}>
+          <Navbar.Brand
+            className="fw-bold ms-auto"
+            style={{ color: "#115e8bff" }}
+          >
+            <img
+              src="/IMAGES/logo.png"
+              alt="Logo"
+              style={{ height: 32, marginRight: 8, verticalAlign: "middle" }}
+            />
             Admin Panel
           </Navbar.Brand>
         </Container>
@@ -32,9 +40,7 @@ const AdminSidebar = () => {
           placement="start"
         >
           <Offcanvas.Header closeButton>
-            <Offcanvas.Title id="offcanvasNavbarLabel">
-              Menu
-            </Offcanvas.Title>
+            <Offcanvas.Title id="offcanvasNavbarLabel">Menu</Offcanvas.Title>
           </Offcanvas.Header>
           <Offcanvas.Body>
             <Nav className="flex-column">
@@ -45,13 +51,18 @@ const AdminSidebar = () => {
                   className={({ isActive }) =>
                     "nav-link mb-2" + (isActive ? " active fw-bold" : "")
                   }
-                  style={({ isActive }) => isActive ? { color: '#ce1313ff' } : {}}
+                  style={({ isActive }) =>
+                    isActive ? { color: "#115e8bff" } : {}
+                  }
                 >
                   {link.label}
                 </NavLink>
               ))}
               <hr />
-              <button className="btn btn-outline-danger w-100" onClick={handleLogout}>
+              <button
+                className="btn btn-outline-danger w-100"
+                onClick={handleLogout}
+              >
                 Logout
               </button>
             </Nav>

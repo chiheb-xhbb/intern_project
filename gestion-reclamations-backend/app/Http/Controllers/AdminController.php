@@ -28,6 +28,9 @@ class AdminController extends Controller
             'resolved_today' => Reclamation::where('statut', 'résolue')
                                         ->whereDate('date_resolution', today())
                                         ->count(),
+            'resolved_count' => Reclamation::where('statut', 'résolue')->count(),
+            'rejected_count' => Reclamation::where('statut', 'rejetée')->count(),
+            'closed_count' => Reclamation::where('statut', 'clôturée')->count(),
             'total_clients' => DB::table('clients')->count(),
         ];
 

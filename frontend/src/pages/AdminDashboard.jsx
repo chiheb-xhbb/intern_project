@@ -17,7 +17,6 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     clients: 0,
-    comptes: 0,
     reclamations: {
       "en attente": 0,
       "en cours": 0,
@@ -40,9 +39,9 @@ const AdminDashboard = () => {
           reclamations: {
             "en attente": stats.pending_count,
             "en cours": stats.in_progress_count,
-            résolue: stats.resolved_today,
-            rejetée: 0, // Not provided by backend
-            clôturée: 0, // Not provided by backend
+            résolue: stats.resolved_count,
+            rejetée: stats.rejected_count,
+            clôturée: stats.closed_count,
           },
         });
       } catch (err) {
@@ -58,7 +57,7 @@ const AdminDashboard = () => {
     <>
       <AdminSidebar />
       <div className="container py-4">
-        <h2 className="mb-4 fw-bold" style={{ color: '#b91c1c' }}>Tableau de bord Admin</h2>
+        <h2 className="mb-4 fw-bold" style={{ color: '#115e8bff' }}>Tableau de bord Admin</h2>
         {error && <div className="alert alert-danger">{error}</div>}
         <Row className="mb-4">
           <Col md={4} className="mb-3">
@@ -83,7 +82,7 @@ const AdminDashboard = () => {
             <Col md={2} xs={6} className="mb-3" key={status.key}>
               <Card className="text-center">
                 <Card.Body>
-                  <Card.Subtitle className="mb-2" style={{ color: '#b91c1c' }}>{status.label}</Card.Subtitle>
+                  <Card.Subtitle className="mb-2" style={{ color: '#115e8bff' }}>{status.label}</Card.Subtitle>
                   {loading ? <Skeleton height={24} width={40} /> : <span className="fw-bold">{stats.reclamations[status.key]}</span>}
                 </Card.Body>
               </Card>
