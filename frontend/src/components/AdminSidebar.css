@@ -1,0 +1,18 @@
+.admin-nav-link {
+  transition: background 0.2s, color 0.2s, padding 0.2s;
+  border-radius: 0.5rem;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+.admin-nav-link:hover, .admin-nav-link:focus {
+  color: #115e8bff !important;
+  background: #e6f3fa;
+  text-decoration: none;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(17,94,139,0.07);
+}
+.admin-nav-link.active {
+  color: #115e8bff !important;
+  background: #e6f3fa;
+  font-weight: 700;
+} 

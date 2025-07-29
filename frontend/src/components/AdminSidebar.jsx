@@ -1,12 +1,13 @@
 import React from "react";
 import { Nav, Navbar, Offcanvas, Container } from "react-bootstrap";
 import { NavLink, useNavigate } from "react-router-dom";
+import "./AdminSidebar.css";
 
 const navLinks = [
   { to: "/dashboard", label: "Dashboard" },
+  { to: "/admin/reclamations", label: "Réclamations" },
   { to: "/admin/clients", label: "Clients" },
   { to: "/admin/comptes", label: "Comptes Bancaires" },
-  { to: "/admin/reclamations", label: "Réclamations" },
 ];
 
 const AdminSidebar = () => {
@@ -49,7 +50,7 @@ const AdminSidebar = () => {
                   key={link.to}
                   to={link.to}
                   className={({ isActive }) =>
-                    "nav-link mb-2" + (isActive ? " active fw-bold" : "")
+                    "admin-nav-link nav-link mb-2" + (isActive ? " active fw-bold" : "")
                   }
                   style={({ isActive }) =>
                     isActive ? { color: "#115e8bff" } : {}

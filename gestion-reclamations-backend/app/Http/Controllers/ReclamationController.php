@@ -69,7 +69,7 @@ class ReclamationController extends Controller
             'compte_bancaire_id' => 'required|exists:comptes_bancaires,id',
             'type_reclamation' => [
                 'required',
-                Rule::in(['Carte bloquée', 'Erreur de virement', 'Retard crédit', 'Autre']),
+                Rule::in(['Carte bloquée', 'Erreur de virement', 'Retard crédit', 'Chèque rejeté', 'Autre']),
             ],
             'canal' => [
                 'nullable',
