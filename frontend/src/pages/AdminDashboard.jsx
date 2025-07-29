@@ -37,7 +37,6 @@ const AdminDashboard = () => {
         const stats = response.data.stats;
         setStats({
           clients: stats.total_clients,
-          comptes: 0, // Not provided by backend, set to 0 or fetch separately if needed
           reclamations: {
             "en attente": stats.pending_count,
             "en cours": stats.in_progress_count,
@@ -59,7 +58,7 @@ const AdminDashboard = () => {
     <>
       <AdminSidebar />
       <div className="container py-4">
-        <h2 className="mb-4 fw-bold text-primary">Tableau de bord Admin</h2>
+        <h2 className="mb-4 fw-bold" style={{ color: '#b91c1c' }}>Tableau de bord Admin</h2>
         {error && <div className="alert alert-danger">{error}</div>}
         <Row className="mb-4">
           <Col md={4} className="mb-3">
@@ -84,7 +83,7 @@ const AdminDashboard = () => {
             <Col md={2} xs={6} className="mb-3" key={status.key}>
               <Card className="text-center">
                 <Card.Body>
-                  <Card.Subtitle className="mb-2 text-muted">{status.label}</Card.Subtitle>
+                  <Card.Subtitle className="mb-2" style={{ color: '#b91c1c' }}>{status.label}</Card.Subtitle>
                   {loading ? <Skeleton height={24} width={40} /> : <span className="fw-bold">{stats.reclamations[status.key]}</span>}
                 </Card.Body>
               </Card>

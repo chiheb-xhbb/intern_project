@@ -22,7 +22,7 @@ const AdminSidebar = () => {
       <Navbar bg="light" expand={false} className="mb-4 shadow-sm">
         <Container fluid className="px-3 d-flex align-items-center">
           <Navbar.Toggle aria-controls="offcanvasNavbar" className="me-auto" />
-          <Navbar.Brand className="fw-bold text-primary ms-auto" href="#">
+          <Navbar.Brand className="fw-bold ms-auto" href="#" style={{ color: '#ce1313ff' }}>
             Admin Panel
           </Navbar.Brand>
         </Container>
@@ -43,8 +43,9 @@ const AdminSidebar = () => {
                   key={link.to}
                   to={link.to}
                   className={({ isActive }) =>
-                    "nav-link mb-2" + (isActive ? " active fw-bold text-primary" : "")
+                    "nav-link mb-2" + (isActive ? " active fw-bold" : "")
                   }
+                  style={({ isActive }) => isActive ? { color: '#ce1313ff' } : {}}
                 >
                   {link.label}
                 </NavLink>
