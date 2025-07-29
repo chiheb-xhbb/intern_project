@@ -15,7 +15,6 @@ class PieceJointe extends Model
     protected $fillable = [
         'reclamation_id',
         'fichier_url',
-        'description',
         'taille_fichier',
         'type_fichier',
         'uploaded_at'

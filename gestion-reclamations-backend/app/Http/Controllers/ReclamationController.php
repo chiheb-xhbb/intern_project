@@ -85,7 +85,7 @@ class ReclamationController extends Controller
         }
 
         $validated = $request->validate($rules);
-
+        $rules['pieces_jointes.*'] = 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:5120';
         $reclamation = Reclamation::create([
             'client_id' => $user->admin ? $validated['client_id'] : $user->client->id,
             'admin_id' => $user->admin ? $user->admin->id : null,
@@ -96,6 +96,24 @@ class ReclamationController extends Controller
             'date_reception' => now(),
             'statut' => 'en attente',
         ]);
+        // 🟡 Ajout des pièces jointes SI PRÉSENTES
+        if ($request->hasFile('pieces_jointes')) {
+            foreach ($request->file('pieces_jointes') as $file) {
+                $originalName = $file->getClientOriginalName();
+                $extension = $file->getClientOriginalExtension();
+                $filename = \Str::uuid() . '.' . $extension;
+                $path = $file->storeAs('pieces_jointes', $filename, 'private');
+
+                \App\Models\PieceJointe::create([
+                    'reclamation_id' => $reclamation->id,
+                    'fichier_url' => $path,
+                    'nom_original' => $originalName,
+                    'taille_fichier' => $file->getSize(),
+                    'type_fichier' => strtoupper($extension),
+                    'uploaded_at' => now(),
+                ]);
+            }
+        }
 
         return response()->json([
             'message' => 'Réclamation créée avec succès',

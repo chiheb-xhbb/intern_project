@@ -40,7 +40,6 @@ class PieceJointeController extends Controller
         $pieceJointe = PieceJointe::create([
             'reclamation_id' => $reclamation->id,
             'fichier_url' => $path,
-            'description' => $request->description ?? $originalName,
             'taille_fichier' => $file->getSize(),
             'type_fichier' => strtoupper($extension),
             'nom_original' => $originalName,
