@@ -123,30 +123,40 @@ const AjouterReclamation = ({ show, onHide }) => {
     const errs = validate();
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
+
     setSubmitting(true);
     try {
       const token = localStorage.getItem("token");
-      await axios.post(
-        "/reclamations",
-        {
-          client_id: clientId,
-          compte_bancaire_id: form.compte,
-          type_reclamation: form.type,
-          canal: form.canal,
-          description: form.description,
-          date_reception: form.date,
-          statut: form.statut,
+      const formData = new FormData();
+
+      formData.append("client_id", clientId);
+      formData.append("compte_bancaire_id", form.compte);
+      formData.append("type_reclamation", form.type);
+      formData.append("canal", form.canal);
+      formData.append("description", form.description);
+      formData.append("date_reception", form.date);
+      formData.append("statut", form.statut);
+
+      // Ajouter les fichiers
+      files.forEach((file) => {
+        formData.append("pieces_jointes[]", file);
+      });
+
+      await axios.post("/reclamations", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
         },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      });
+
       toast.success("Réclamation ajoutée avec succès !");
       if (onHide) onHide();
       else navigate("/admin/reclamations");
     } catch (err) {
       let msg = "Erreur lors de l'ajout de la réclamation";
-      if (err.response && err.response.data && err.response.data.message) {
+      if (err.response?.data?.message) {
         msg = err.response.data.message;
-      } else if (err.response && err.response.data && typeof err.response.data === "string") {
+      } else if (typeof err.response?.data === "string") {
         msg = err.response.data;
       }
       setBackendError(msg);
@@ -155,6 +165,7 @@ const AjouterReclamation = ({ show, onHide }) => {
       setSubmitting(false);
     }
   };
+
 
   return (
     <Modal show={show !== false} onHide={onHide} centered size="lg" backdrop="static">
