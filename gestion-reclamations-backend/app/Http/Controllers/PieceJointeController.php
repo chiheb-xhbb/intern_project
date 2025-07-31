@@ -142,4 +142,31 @@ class PieceJointeController extends Controller
             default => 'application/octet-stream',
         };
     }
+    /**
+     * Download attachment by filename
+     */
+    public function downloadByFilename($id)
+    {
+        $pieceJointe = PieceJointe::findOrFail($id);
+
+        $path = $pieceJointe->fichier_url;
+
+        if (!Storage::disk('private')->exists($path)) {
+            abort(404, 'Fichier introuvable');
+        }
+
+        $headers = [
+            'Content-Type' => $this->getMimeType($pieceJointe->type_fichier),
+            'Content-Disposition' => 'attachment; filename="' . $pieceJointe->nom_original . '"',
+        ];
+
+        return Response::stream(function () use ($path) {
+            $stream = Storage::disk('private')->readStream($path);
+            fpassthru($stream);
+            fclose($stream);
+        }, 200, $headers);
+    }
+
+
+
 }

@@ -43,7 +43,7 @@ class Reclamation extends Model
 
     public function compteBancaire()
     {
-        return $this->belongsTo(CompteBancaire::class);
+        return $this->belongsTo(CompteBancaire::class, 'compte_bancaire_id');
     }
 
     

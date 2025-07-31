@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Card, Row, Col, Table, Button, Form, Dropdown, Pagination, InputGroup } from "react-bootstrap";
+import { Card, Row, Col, Table, Button, Form, Dropdown, Pagination, InputGroup,Modal } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import AdminSidebar from "../components/AdminSidebar";
 import axios from "../api/axios";
 import { toast } from "react-toastify";
+
+//for the popup modal
 
 // Mock statuses and data
 const STATUS_OPTIONS = [
@@ -41,6 +43,9 @@ const AdminReclamations = () => {
   const [sortDir, setSortDir] = useState("desc");
   const [statusStats, setStatusStats] = useState({});
   const navigate = useNavigate();
+  // For the popup modal
+  const [selectedReclamation, setSelectedReclamation] = useState(null);
+  const [showDetails, setShowDetails] = useState(false);
 
   // Simulate API fetch
   useEffect(() => {
@@ -59,7 +64,12 @@ const AdminReclamations = () => {
               : "-",
           type: r.type_reclamation,
           statut: r.statut,
+          compte_bancaire: r.compte_bancaire
+            ? r.compte_bancaire.numero_compte
+            : "-",
           date: r.date_reception ? r.date_reception.slice(0, 10) : "",
+          description: r.description || "",
+          pieces_jointes: r.pieces_jointes || [],
         }));
         setReclamations(data);
       } catch (err) {
@@ -128,7 +138,12 @@ const AdminReclamations = () => {
             : "-",
         type: r.type_reclamation,
         statut: r.statut,
+        compte_bancaire: r.compte_bancaire
+          ? r.compte_bancaire.numero_compte
+          : "-",
         date: r.date_reception ? r.date_reception.slice(0, 10) : "",
+        description: r.description || "",
+        pieces_jointes: r.pieces_jointes || [],
       }));
       setReclamations(data);
       toast.success("Statut mis à jour avec succès");
@@ -165,7 +180,12 @@ const AdminReclamations = () => {
             : "-",
         type: r.type_reclamation,
         statut: r.statut,
+        compte_bancaire: r.compte_bancaire
+          ? r.compte_bancaire.numero_compte
+          : "-",
         date: r.date_reception ? r.date_reception.slice(0, 10) : "",
+        description: r.description || "",
+        pieces_jointes: r.pieces_jointes || [],
       }));
       setReclamations(data);
     } catch (err) {
@@ -200,9 +220,9 @@ const AdminReclamations = () => {
                   >
                     {status.charAt(0).toUpperCase() + status.slice(1)}
                   </Card.Subtitle>
-                  <span className={`badge bg-${statusColors[status]}`}>{
-                    statusStats[status] || 0
-                  }</span>
+                  <span className={`badge bg-${statusColors[status]}`}>
+                    {statusStats[status] || 0}
+                  </span>
                 </Card.Body>
               </Card>
             </Col>
@@ -240,13 +260,15 @@ const AdminReclamations = () => {
                   style={{ cursor: "pointer" }}
                   onClick={() => handleSort("statut")}
                 >
-                  Statut {sortBy === "statut" && (sortDir === "asc" ? "▲" : "▼")}
+                  Statut{" "}
+                  {sortBy === "statut" && (sortDir === "asc" ? "▲" : "▼")}
                 </th>
                 <th
                   style={{ cursor: "pointer" }}
                   onClick={() => handleSort("date")}
                 >
-                  Date de réception {sortBy === "date" && (sortDir === "asc" ? "▲" : "▼")}
+                  Date de réception{" "}
+                  {sortBy === "date" && (sortDir === "asc" ? "▲" : "▼")}
                 </th>
                 <th>Actions</th>
               </tr>
@@ -291,17 +313,18 @@ const AdminReclamations = () => {
                       <Button
                         variant="outline-primary"
                         size="sm"
-                        className="me-2"
-                        onClick={() => alert(`View ${r.id}`)}
+                        onClick={() => {
+                          setSelectedReclamation(r); // r is the selected reclamation
+                          setShowDetails(true); // show the modal
+                        }}
                       >
                         Voir
                       </Button>
+
                       <Button
                         variant="outline-danger"
                         size="sm"
-                        onClick={() =>
-                          handleDelete(r.id)
-                        }
+                        onClick={() => handleDelete(r.id)}
                       >
                         Supprimer
                       </Button>
@@ -317,8 +340,14 @@ const AdminReclamations = () => {
             Page {page} sur {totalPages}
           </div>
           <Pagination className="mb-0">
-            <Pagination.First onClick={() => setPage(1)} disabled={page === 1} />
-            <Pagination.Prev onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} />
+            <Pagination.First
+              onClick={() => setPage(1)}
+              disabled={page === 1}
+            />
+            <Pagination.Prev
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+            />
             {Array.from({ length: totalPages }, (_, i) => (
               <Pagination.Item
                 key={i + 1}
@@ -328,11 +357,92 @@ const AdminReclamations = () => {
                 {i + 1}
               </Pagination.Item>
             ))}
-            <Pagination.Next onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} />
-            <Pagination.Last onClick={() => setPage(totalPages)} disabled={page === totalPages} />
+            <Pagination.Next
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+            />
+            <Pagination.Last
+              onClick={() => setPage(totalPages)}
+              disabled={page === totalPages}
+            />
           </Pagination>
         </div>
       </div>
+      <Modal
+        show={showDetails}
+        onHide={() => setShowDetails(false)}
+        centered
+        size="lg"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Détails de la réclamation</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedReclamation ? (
+            <>
+              <p>
+                <strong>ID:</strong> {selectedReclamation.id}
+              </p>
+              <p>
+                <strong>Client:</strong> {selectedReclamation.client}
+              </p>
+              <p>
+                <strong>Type:</strong> {selectedReclamation.type}
+              </p>
+              <p>
+                <strong>Statut:</strong> {selectedReclamation.statut}
+              </p>
+              <p>
+                <strong>Numero de compte:</strong>{" "}
+                {selectedReclamation.compte_bancaire}
+              </p>
+              <p>
+                <strong>Date de réception:</strong> {selectedReclamation.date}
+              </p>
+              <p>
+                <strong>Description:</strong> {selectedReclamation.description}
+              </p>
+              {selectedReclamation.pieces_jointes &&
+              selectedReclamation.pieces_jointes.length > 0 ? (
+                <>
+                  <p>
+                    <strong>Pièces jointes :</strong>
+                  </p>
+                  <ul>
+                    {selectedReclamation.pieces_jointes.map((pj, index) => (
+                      <li key={index}>
+                        <a
+                          href={`http://localhost:8000/api/pieces/download/${pj.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {pj.description || `Fichier ${index + 1}`}
+                        </a>{" "}
+                        ({pj.type_fichier},{" "}
+                        {Math.round(pj.taille_fichier / 1024)} Ko)
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : (
+                <p>
+                  <strong>Pièces jointes :</strong> Aucune
+                </p>
+              )}
+            </>
+          ) : (
+            <p>Aucune réclamation sélectionnée</p>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="outline-primary"
+            onClick={() => setShowDetails(false)}
+          >
+            Fermer
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </>
   );
 };

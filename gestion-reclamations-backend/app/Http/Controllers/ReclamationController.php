@@ -22,8 +22,8 @@ class ReclamationController extends Controller
         $this->authorize('viewAny', Reclamation::class);
 
 
-        $query = Reclamation::with(['client.personne', 'piecesJointes', 'historiques.admin.personne'])
-            ->orderBy('date_reception', 'desc');
+        $query = Reclamation::with(['client.personne', 'compteBancaire', 'piecesJointes', 'historiques.admin.personne'])
+        ->orderBy('date_reception', 'desc');
 
         return response()->json([
             'data' => $query->paginate(15)

@@ -3,7 +3,6 @@ import { Modal, Button, Form, Row, Col, InputGroup, Spinner } from "react-bootst
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import axios from "../api/axios";
-
 const TYPE_OPTIONS = [
   "Carte bloquée",
   "Erreur de virement",
@@ -168,14 +167,17 @@ const AjouterReclamation = ({ show, onHide }) => {
 
 
   return (
-    <Modal show={show !== false} onHide={onHide} centered size="lg" backdrop="static">
+    <Modal
+      show={show !== false}
+      onHide={() => navigate("/admin/reclamations")}
+      centered
+      size="lg"
+      backdrop="static"
+    >
       <Modal.Header closeButton>
         <Modal.Title>Ajouter une réclamation</Modal.Title>
       </Modal.Header>
       <Form onSubmit={handleSubmit} autoComplete="off">
-        {backendError && (
-          <div className="alert alert-danger mb-3">{backendError}</div>
-        )}
         <Modal.Body>
           <Row className="g-3">
             <Col md={6}>
@@ -189,7 +191,9 @@ const AjouterReclamation = ({ show, onHide }) => {
                   required
                   isInvalid={!!errors.clientId}
                 />
-                <Form.Control.Feedback type="invalid">{errors.clientId}</Form.Control.Feedback>
+                <Form.Control.Feedback type="invalid">
+                  {errors.clientId}
+                </Form.Control.Feedback>
               </Form.Group>
             </Col>
             <Col md={6}>
@@ -203,10 +207,14 @@ const AjouterReclamation = ({ show, onHide }) => {
                 >
                   <option value="">Sélectionner...</option>
                   {TYPE_OPTIONS.map((t) => (
-                    <option key={t} value={t}>{t}</option>
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
                   ))}
                 </Form.Select>
-                <Form.Control.Feedback type="invalid">{errors.type}</Form.Control.Feedback>
+                <Form.Control.Feedback type="invalid">
+                  {errors.type}
+                </Form.Control.Feedback>
               </Form.Group>
             </Col>
             <Col md={6}>
@@ -220,10 +228,14 @@ const AjouterReclamation = ({ show, onHide }) => {
                 >
                   <option value="">Sélectionner...</option>
                   {CANAL_OPTIONS.map((c) => (
-                    <option key={c.value} value={c.value}>{c.label}</option>
+                    <option key={c.value} value={c.value}>
+                      {c.label}
+                    </option>
                   ))}
                 </Form.Select>
-                <Form.Control.Feedback type="invalid">{errors.canal}</Form.Control.Feedback>
+                <Form.Control.Feedback type="invalid">
+                  {errors.canal}
+                </Form.Control.Feedback>
               </Form.Group>
             </Col>
             <Col md={6}>
@@ -237,12 +249,19 @@ const AjouterReclamation = ({ show, onHide }) => {
                   isInvalid={!!errors.compte}
                 >
                   <option value="">Aucun</option>
-                  {Array.isArray(comptes) && comptes.map((c) => (
-                    <option key={c.id} value={c.id}>{c.numero_compte}</option>
-                  ))}
+                  {Array.isArray(comptes) &&
+                    comptes.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.numero_compte}
+                      </option>
+                    ))}
                 </Form.Select>
-                <Form.Control.Feedback type="invalid">{errors.compte}</Form.Control.Feedback>
-                {loadingComptes && <div className="small text-muted">Chargement...</div>}
+                <Form.Control.Feedback type="invalid">
+                  {errors.compte}
+                </Form.Control.Feedback>
+                {loadingComptes && (
+                  <div className="small text-muted">Chargement...</div>
+                )}
               </Form.Group>
             </Col>
             <Col md={6}>
@@ -255,7 +274,9 @@ const AjouterReclamation = ({ show, onHide }) => {
                   onChange={handleChange}
                   isInvalid={!!errors.date}
                 />
-                <Form.Control.Feedback type="invalid">{errors.date}</Form.Control.Feedback>
+                <Form.Control.Feedback type="invalid">
+                  {errors.date}
+                </Form.Control.Feedback>
               </Form.Group>
             </Col>
             <Col md={12}>
@@ -269,12 +290,16 @@ const AjouterReclamation = ({ show, onHide }) => {
                   rows={3}
                   isInvalid={!!errors.description}
                 />
-                <Form.Control.Feedback type="invalid">{errors.description}</Form.Control.Feedback>
+                <Form.Control.Feedback type="invalid">
+                  {errors.description}
+                </Form.Control.Feedback>
               </Form.Group>
             </Col>
             <Col md={12}>
               <Form.Group className="mb-2">
-                <Form.Label>Pièces jointes (PDF, PNG, JPEG, DOCX, max 5MB/fichier)</Form.Label>
+                <Form.Label>
+                  Pièces jointes (PDF, PNG, JPEG, DOCX, max 5MB/fichier)
+                </Form.Label>
                 <Form.Control
                   type="file"
                   multiple
@@ -284,11 +309,20 @@ const AjouterReclamation = ({ show, onHide }) => {
                 />
                 <div className="mt-2">
                   {files.map((file, idx) => (
-                    <div key={idx} className="d-flex align-items-center mb-1 bg-light rounded px-2 py-1">
+                    <div
+                      key={idx}
+                      className="d-flex align-items-center mb-1 bg-light rounded px-2 py-1"
+                    >
                       <span className="me-2">
-                        {file.type.includes("pdf") && <i className="bi bi-file-earmark-pdf"></i>}
-                        {file.type.includes("image") && <i className="bi bi-file-earmark-image"></i>}
-                        {file.type.includes("word") && <i className="bi bi-file-earmark-word"></i>}
+                        {file.type.includes("pdf") && (
+                          <i className="bi bi-file-earmark-pdf"></i>
+                        )}
+                        {file.type.includes("image") && (
+                          <i className="bi bi-file-earmark-image"></i>
+                        )}
+                        {file.type.includes("word") && (
+                          <i className="bi bi-file-earmark-word"></i>
+                        )}
                       </span>
                       <span className="flex-grow-1 small">
                         {file.name} ({(file.size / 1024).toFixed(1)} KB)
@@ -309,12 +343,28 @@ const AjouterReclamation = ({ show, onHide }) => {
             </Col>
           </Row>
         </Modal.Body>
+        {backendError && (
+          <div className="alert alert-danger mb-3">{backendError}</div>
+        )}
         <Modal.Footer>
-          <Button variant="secondary" onClick={onHide || (() => navigate("/admin/reclamations"))} disabled={submitting}>
+          <Button
+            variant="secondary"
+            onClick={onHide || (() => navigate("/admin/reclamations"))}
+            disabled={submitting}
+          >
             Annuler
           </Button>
-          <Button type="submit" variant="primary" style={{ background: "#115e8bff", border: "none" }} disabled={submitting}>
-            {submitting ? <Spinner size="sm" animation="border" /> : "Soumettre"}
+          <Button
+            type="submit"
+            variant="primary"
+            style={{ background: "#115e8bff", border: "none" }}
+            disabled={submitting}
+          >
+            {submitting ? (
+              <Spinner size="sm" animation="border" />
+            ) : (
+              "Soumettre"
+            )}
           </Button>
         </Modal.Footer>
       </Form>

@@ -14,6 +14,7 @@ Route::get('/test-api', function () {
 
 // AUTH
 Route::post('/login', [AuthController::class, 'login']);//done
+Route::get('/pieces/download/{id}', [PieceJointeController::class, 'downloadByFilename']);
 
 // Routes protégées
 Route::middleware('auth:sanctum')->group(function () {
@@ -52,4 +53,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // Pièces jointes
     Route::post('/reclamations/{reclamation}/upload', [PieceJointeController::class, 'upload']);
     Route::get('/pieces/{piece}', [PieceJointeController::class, 'download']);
+
+
 });
