@@ -1,18 +1,284 @@
-.admin-nav-link {
-  transition: background 0.2s, color 0.2s, padding 0.2s;
-  border-radius: 0.5rem;
-  padding-left: 0.75rem;
-  padding-right: 0.75rem;
+/* Navbar principal */
+.admin-navbar {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%) !important;
+  border-bottom: 1px solid #e9ecef !important;
+  backdrop-filter: blur(10px);
 }
-.admin-nav-link:hover, .admin-nav-link:focus {
+
+/* Toggle button personnalisé */
+.custom-toggle {
+  background: transparent !important;
+  border: 2px solid #115e8bff !important;
+  border-radius: 8px !important;
+  padding: 8px 12px !important;
+  transition: all 0.3s ease !important;
+}
+
+.custom-toggle:hover {
+  background: #115e8bff !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(17, 94, 139, 0.3) !important;
+}
+
+.custom-toggle:hover svg {
+  color: white !important;
+}
+
+.custom-toggle:focus {
+  box-shadow: 0 0 0 3px rgba(17, 94, 139, 0.25) !important;
+}
+
+/* Brand styling */
+.admin-brand {
   color: #115e8bff !important;
-  background: #e6f3fa;
-  text-decoration: none;
+  font-size: 1.25rem;
+  font-weight: 700 !important;
+  display: flex;
+  align-items: center;
+  letter-spacing: -0.5px;
+}
+
+.brand-logo {
+  height: 32px;
+  margin-right: 8px;
+  vertical-align: middle;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+/* Offcanvas container */
+.admin-offcanvas {
+  width: 280px !important;
+  background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+  border-right: 1px solid #e9ecef;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Offcanvas header */
+.admin-offcanvas-header {
+  background: linear-gradient(135deg, #115e8bff 0%, #1a73a8 100%);
+  color: white !important;
+  border-bottom: none;
+  padding: 1.5rem 1.25rem;
+}
+
+.admin-offcanvas-title {
+  color: white !important;
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(17,94,139,0.07);
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  letter-spacing: 0.5px;
 }
-.admin-nav-link.active {
+
+.offcanvas-logo {
+  height: 24px;
+  margin-right: 10px;
+  filter: brightness(0) invert(1);
+}
+
+.admin-offcanvas-header .btn-close {
+  filter: invert(1);
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.admin-offcanvas-header .btn-close:hover {
+  opacity: 1;
+}
+
+/* Offcanvas body */
+.admin-offcanvas-body {
+  padding: 1.5rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Navigation section */
+.nav-section {
+  flex-grow: 1;
+}
+
+/* Navigation links */
+.admin-nav-link {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 12px !important;
+  padding: 12px 16px !important;
+  margin-bottom: 8px !important;
+  color: #4a5568 !important;
+  text-decoration: none !important;
+  font-weight: 500;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid transparent;
+}
+
+.admin-nav-link::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(17, 94, 139, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.admin-nav-link:hover::before {
+  left: 100%;
+}
+
+.admin-nav-link:hover, 
+.admin-nav-link:focus {
   color: #115e8bff !important;
-  background: #e6f3fa;
-  font-weight: 700;
-} 
+  background: linear-gradient(135deg, #e6f3fa 0%, #f0f8ff 100%) !important;
+  text-decoration: none !important;
+  font-weight: 600 !important;
+  transform: translateX(4px);
+  border-color: rgba(17, 94, 139, 0.2);
+  box-shadow: 0 4px 16px rgba(17, 94, 139, 0.15);
+}
+
+.admin-nav-link.active {
+  color: white !important;
+  background: linear-gradient(135deg, #115e8bff 0%, #1a73a8 100%) !important;
+  font-weight: 600 !important;
+  transform: translateX(4px);
+  border-color: #115e8bff;
+  box-shadow: 0 6px 20px rgba(17, 94, 139, 0.3);
+}
+
+.admin-nav-link.active .nav-icon {
+  color: white !important;
+}
+
+/* Icônes de navigation */
+.nav-icon {
+  color: #6b7280;
+  transition: color 0.3s ease;
+  flex-shrink: 0;
+}
+
+.admin-nav-link:hover .nav-icon {
+  color: #115e8bff !important;
+}
+
+.nav-text {
+  font-size: 0.95rem;
+  letter-spacing: 0.25px;
+}
+
+/* Section logout */
+.logout-section {
+  margin-top: auto;
+  padding-top: 1rem;
+}
+
+.logout-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #dee2e6, transparent);
+  border: none;
+  margin: 0;
+}
+
+/* Bouton logout */
+.logout-btn {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+  border: none !important;
+  color: white !important;
+  font-weight: 600;
+  padding: 12px 16px !important;
+  border-radius: 12px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 0.95rem;
+  letter-spacing: 0.25px;
+  position: relative;
+  overflow: hidden;
+}
+
+.logout-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.logout-btn:hover::before {
+  left: 100%;
+}
+
+.logout-btn:hover {
+  background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4) !important;
+  color: white !important;
+}
+
+.logout-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3) !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .admin-offcanvas {
+    width: 260px !important;
+  }
+  
+  .admin-offcanvas-body {
+    padding: 1.25rem 1rem;
+  }
+  
+  .admin-nav-link {
+    padding: 10px 14px !important;
+  }
+  
+  .nav-text {
+    font-size: 0.9rem;
+  }
+}
+
+/* Animations d'entrée */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.admin-nav-link {
+  animation: slideInLeft 0.3s ease forwards;
+}
+
+.admin-nav-link:nth-child(1) { animation-delay: 0.1s; }
+.admin-nav-link:nth-child(2) { animation-delay: 0.2s; }
+.admin-nav-link:nth-child(3) { animation-delay: 0.3s; }
+
+/* Amélioration de l'accessibilité */
+.admin-nav-link:focus-visible {
+  outline: 2px solid #115e8bff;
+  outline-offset: 2px;
+}
+
+.logout-btn:focus-visible {
+  outline: 2px solid #dc3545;
+  outline-offset: 2px;
+}
+
+/* Effet de survol subtil pour le container */
+.admin-offcanvas-body:hover .admin-nav-link:not(:hover):not(.active) {
+  opacity: 0.7;
+}
+
+.admin-offcanvas-body .admin-nav-link:hover,
+.admin-offcanvas-body .admin-nav-link.active {
+  opacity: 1;
+}
