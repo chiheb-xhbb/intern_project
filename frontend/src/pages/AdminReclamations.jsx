@@ -102,6 +102,16 @@ const AdminReclamations = () => {
           ? a.statut.localeCompare(b.statut)
           : b.statut.localeCompare(a.statut);
       }
+      else if (sortBy === "statut") {
+        return sortDir === "asc"
+          ? a.statut.localeCompare(b.statut)
+          : b.statut.localeCompare(a.statut);
+      }
+      else if (sortBy === "client") {
+        return sortDir === "asc"
+          ? a.client.localeCompare(b.client)
+          : b.client.localeCompare(a.client);
+      }
       return 0;
     });
     setFiltered(data);
@@ -250,14 +260,25 @@ const AdminReclamations = () => {
               <tr>
                 <th
                   style={{ cursor: "pointer" }}
+                  title="Trier par ID"
                   onClick={() => handleSort("id")}
                 >
                   ID {sortBy === "id" && (sortDir === "asc" ? "▲" : "▼")}
                 </th>
-                <th>Client</th>
+
+                <th
+                  style={{ cursor: "pointer" }}
+                  title="Trier par nom du client"
+                  onClick={() => handleSort("client")}
+                >
+                  Client{" "}
+                  {sortBy === "client" && (sortDir === "asc" ? "▲" : "▼")}
+                </th>
+
                 <th>Type</th>
                 <th
                   style={{ cursor: "pointer" }}
+                  title="Trier par statut"
                   onClick={() => handleSort("statut")}
                 >
                   Statut{" "}
@@ -265,6 +286,7 @@ const AdminReclamations = () => {
                 </th>
                 <th
                   style={{ cursor: "pointer" }}
+                  title="Trier par date de réception"
                   onClick={() => handleSort("date")}
                 >
                   Date de réception{" "}
@@ -375,7 +397,9 @@ const AdminReclamations = () => {
         size="lg"
       >
         <Modal.Header closeButton>
-          <Modal.Title>Détails de la réclamation</Modal.Title>
+          <Modal.Title style={{ color: "#115e8bff" }}>
+            Détails de la réclamation
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {selectedReclamation ? (
