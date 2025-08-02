@@ -7,7 +7,6 @@ const navLinks = [
   { to: "/dashboard", label: "Dashboard" },
   { to: "/admin/reclamations", label: "Réclamations" },
   { to: "/admin/clients", label: "Clients" },
-  { to: "/admin/comptes", label: "Comptes Bancaires" },
 ];
 
 const AdminSidebar = () => {
