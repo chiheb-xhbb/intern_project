@@ -1,0 +1,428 @@
+/* ===== DASHBOARD GENERAL ===== */
+.admin-dashboard {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  min-height: 100vh;
+  padding-top: 0;
+}
+
+.container-fluid {
+  max-width: 1400px;
+}
+
+/* ===== HEADER SECTION ===== */
+.dashboard-header {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+}
+
+.dashboard-title {
+  color: #115e8bff;
+  font-weight: 700;
+  font-size: 2.25rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  letter-spacing: -0.5px;
+}
+
+.dashboard-subtitle {
+  color: #6c757d;
+  font-size: 1.1rem;
+  margin-bottom: 0;
+  font-weight: 400;
+}
+
+/* ===== SECTION HEADERS ===== */
+.section-header {
+  margin-bottom: 1.5rem;
+}
+
+.section-title {
+  color: #2c3e50;
+  font-weight: 600;
+  font-size: 1.5rem;
+  margin-bottom: 0.25rem;
+  letter-spacing: -0.25px;
+}
+
+.section-subtitle {
+  color: #6c757d;
+  font-size: 0.95rem;
+  margin-bottom: 0;
+}
+
+/* ===== STAT CARDS ===== */
+.stat-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 16px !important;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #115e8bff, #17a2b8, #28a745);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.stat-card:hover::before {
+  opacity: 1;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
+}
+
+.stat-icon-wrapper {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.stat-card:hover .stat-icon-wrapper {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.stat-title {
+  color: #495057;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0.25px;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -1px;
+}
+
+/* ===== STATUS CARDS ===== */
+.status-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 12px !important;
+  background: #ffffff;
+  position: relative;
+  overflow: hidden;
+}
+
+.status-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--status-color, #115e8bff);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+  transform-origin: left;
+}
+
+.status-card:hover::before {
+  transform: scaleX(1);
+}
+
+.status-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12) !important;
+}
+
+.status-icon-wrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+.status-card:hover .status-icon-wrapper {
+  transform: scale(1.1);
+}
+
+.status-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* ===== CHART SECTION ===== */
+.chart-card {
+  border-radius: 16px !important;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  overflow: hidden;
+}
+
+.chart-header {
+  background: linear-gradient(135deg, #115e8bff 0%, #17a2b8 100%) !important;
+  color: white !important;
+  border: none !important;
+  padding: 1.5rem 2rem;
+}
+
+.chart-header h5 {
+  color: white !important;
+  font-weight: 600;
+  letter-spacing: 0.25px;
+}
+
+.chart-body {
+  padding: 2rem;
+  background: #ffffff;
+}
+
+/* ===== LOADING STATES ===== */
+.loading-spinner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  text-align: center;
+}
+
+.loading-spinner-container .spinner-border {
+  width: 3rem;
+  height: 3rem;
+  border-width: 0.3em;
+}
+
+.loading-spinner-container p {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+/* ===== CUSTOM TOOLTIP ===== */
+.custom-tooltip {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  padding: 0;
+  overflow: hidden;
+  min-width: 180px;
+}
+
+.tooltip-header {
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  color: white;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.tooltip-content {
+  padding: 1rem;
+  text-align: center;
+}
+
+.tooltip-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2c3e50;
+  display: block;
+  line-height: 1.2;
+}
+
+.tooltip-text {
+  color: #6c757d;
+  font-size: 0.85rem;
+  display: block;
+  margin-top: 0.25rem;
+}
+
+.tooltip-percentage {
+  color: #115e8bff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+/* ===== EMPTY STATES ===== */
+.empty-chart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  text-align: center;
+  color: #6c757d;
+}
+
+.empty-chart svg {
+  color: #dee2e6;
+  margin-bottom: 1rem;
+}
+
+.empty-chart h5 {
+  color: #495057;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+/* ===== ALERT IMPROVEMENTS ===== */
+.alert {
+  border: none !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 20px rgba(220, 53, 69, 0.15);
+}
+
+.alert-danger {
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%) !important;
+  color: #721c24 !important;
+}
+
+.alert-heading {
+  font-weight: 600 !important;
+  font-size: 1.1rem !important;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 992px) {
+  .dashboard-title {
+    font-size: 1.75rem;
+  }
+  
+  .dashboard-header {
+    padding: 1.5rem;
+  }
+  
+  .stat-value {
+    font-size: 1.75rem;
+  }
+  
+  .status-value {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-title {
+    font-size: 1.5rem;
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .dashboard-title svg {
+    margin-bottom: 0.5rem;
+    margin-right: 0 !important;
+  }
+  
+  .dashboard-header {
+    padding: 1.25rem;
+    text-align: center;
+  }
+  
+  .chart-header {
+    padding: 1.25rem 1.5rem;
+  }
+  
+  .chart-body {
+    padding: 1.5rem;
+  }
+  
+  .stat-card .card-body {
+    padding: 1.5rem !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .admin-dashboard .container-fluid {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .status-card .card-body {
+    padding: 1rem !important;
+  }
+  
+  .status-icon-wrapper {
+    width: 35px;
+    height: 35px;
+  }
+  
+  .status-value {
+    font-size: 1.25rem;
+  }
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stat-card,
+.status-card,
+.chart-card {
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+.stat-card:nth-child(1) { animation-delay: 0.1s; }
+.stat-card:nth-child(2) { animation-delay: 0.2s; }
+.stat-card:nth-child(3) { animation-delay: 0.3s; }
+
+.status-card:nth-child(1) { animation-delay: 0.1s; }
+.status-card:nth-child(2) { animation-delay: 0.15s; }
+.status-card:nth-child(3) { animation-delay: 0.2s; }
+.status-card:nth-child(4) { animation-delay: 0.25s; }
+.status-card:nth-child(5) { animation-delay: 0.3s; }
+
+/* ===== FOCUS STATES ===== */
+.stat-card:focus-within,
+.status-card:focus-within {
+  outline: 2px solid #115e8bff;
+  outline-offset: 2px;
+}
+
+/* ===== PRINT STYLES ===== */
+@media print {
+  .admin-dashboard {
+    background: white !important;
+  }
+  
+  .stat-card,
+  .status-card,
+  .chart-card {
+    box-shadow: none !important;
+    border: 1px solid #dee2e6 !important;
+  }
+  
+  .chart-header {
+    background: #f8f9fa !important;
+    color: #212529 !important;
+  }
+}

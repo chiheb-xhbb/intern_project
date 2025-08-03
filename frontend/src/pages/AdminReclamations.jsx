@@ -1,40 +1,325 @@
-import React, { useState, useEffect } from "react";
-import { Card, Row, Col, Table, Button, Form, Dropdown, Pagination, InputGroup,Modal } from "react-bootstrap";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { 
+  Card, 
+  Row, 
+  Col, 
+  Table, 
+  Button, 
+  Form, 
+  Dropdown, 
+  Pagination, 
+  InputGroup,
+  Modal,
+  Badge,
+  OverlayTrigger,
+  Tooltip,
+  Spinner,
+  Alert
+} from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import {
+  FaEye,
+  FaTrash,
+  FaPlus,
+  FaSearch,
+  FaTimes,
+  FaSort,
+  FaSortUp,
+  FaSortDown,
+  FaClock,
+  FaSpinner,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaLock,
+  FaFileAlt,
+  FaDownload,
+  FaUser,
+  FaCalendarAlt,
+  FaTag,
+  FaExclamationTriangle
+} from "react-icons/fa";
 import AdminSidebar from "../components/AdminSidebar";
 import axios from "../api/axios";
 import { toast } from "react-toastify";
+import "./AdminReclamations.css";
 
-//for the popup modal
-
-// Mock statuses and data
-const STATUS_OPTIONS = [
-  "en attente",
-  "en cours",
-  "résolue",
-  "rejetée",
-  "clôturée",
-];
-
-const MOCK_RECLAMATIONS = Array.from({ length: 32 }, (_, i) => ({
-  id: 1000 + i,
-  client: `Client ${i % 5 + 1}`,
-  type: ["Carte", "Chèque", "Virement", "Prêt"][i % 4],
-  statut: STATUS_OPTIONS[i % STATUS_OPTIONS.length],
-  date: `2024-07-${(i % 28) + 1}`,
-}));
-
-const statusColors = {
-  "en attente": "secondary",
-  "en cours": "warning",
-  résolue: "success",
-  rejetée: "danger",
-  clôturée: "dark",
+// Configuration des statuts avec couleurs et icônes
+const STATUS_CONFIG = {
+  "en attente": {
+    label: "En attente",
+    variant: "warning",
+    color: "#ffc107",
+    icon: FaClock,
+    bgColor: "#fff3cd"
+  },
+  "en cours": {
+    label: "En cours", 
+    variant: "info",
+    color: "#17a2b8",
+    icon: FaSpinner,
+    bgColor: "#d1ecf1"
+  },
+  "résolue": {
+    label: "Résolue",
+    variant: "success", 
+    color: "#28a745",
+    icon: FaCheckCircle,
+    bgColor: "#d4edda"
+  },
+  "rejetée": {
+    label: "Rejetée",
+    variant: "danger",
+    color: "#dc3545", 
+    icon: FaTimesCircle,
+    bgColor: "#f8d7da"
+  },
+  "clôturée": {
+    label: "Clôturée",
+    variant: "secondary",
+    color: "#6c757d",
+    icon: FaLock,
+    bgColor: "#e2e3e5"
+  }
 };
 
+const STATUS_OPTIONS = Object.keys(STATUS_CONFIG);
 const PAGE_SIZE = 8;
 
+// Fonction helper pour mapper les données de l'API
+const mapReclamationData = (apiData) => ({
+  id: apiData.id,
+  client: apiData.client?.personne 
+    ? `${apiData.client.personne.nom} ${apiData.client.personne.prenom}`
+    : "-",
+  type: apiData.type_reclamation,
+  statut: apiData.statut,
+  compte_bancaire: apiData.compte_bancaire?.numero_compte || "-",
+  date: apiData.date_reception ? apiData.date_reception.slice(0, 10) : "",
+  description: apiData.description || "",
+  pieces_jointes: apiData.pieces_jointes || [],
+});
+
+// Fonction helper pour calculer les statistiques
+const calculateStatusStats = (reclamations) => {
+  const stats = {};
+  STATUS_OPTIONS.forEach(status => stats[status] = 0);
+  reclamations.forEach(r => {
+    if (stats.hasOwnProperty(r.statut)) {
+      stats[r.statut]++;
+    }
+  });
+  return stats;
+};
+
+// Composant pour les cartes de statistiques
+const StatusCard = ({ status, count, onClick }) => {
+  const config = STATUS_CONFIG[status];
+  const IconComponent = config.icon;
+  
+  return (
+    <Card 
+      className="status-overview-card h-100 border-0 shadow-sm"
+      style={{ cursor: onClick ? 'pointer' : 'default' }}
+      onClick={onClick}
+    >
+      <Card.Body className="p-3 text-center">
+        <div 
+          className="status-icon-wrapper mx-auto mb-2"
+          style={{ backgroundColor: config.bgColor }}
+        >
+          <IconComponent style={{ color: config.color }} size={20} />
+        </div>
+        <Card.Subtitle className="status-card-label mb-2">
+          {config.label}
+        </Card.Subtitle>
+        <Badge 
+          bg={config.variant} 
+          className="status-count-badge"
+        >
+          {count}
+        </Badge>
+      </Card.Body>
+    </Card>
+  );
+};
+
+// Composant pour le badge de statut avec positionnement dynamique
+const StatusBadge = ({ status, onStatusChange, disabled = false, rowIndex = 0 }) => {
+  const config = STATUS_CONFIG[status];
+  const IconComponent = config.icon;
+  const dropdownRef = useRef(null);
+  const [dropDirection, setDropDirection] = useState('dropdown');
+
+  // Fonction pour calculer la position et déterminer la direction du dropdown
+  const handleDropdownToggle = (isOpen) => {
+    if (isOpen && dropdownRef.current) {
+      requestAnimationFrame(() => {
+        const rect = dropdownRef.current.getBoundingClientRect();
+        const dropdownHeight = 200;
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const spaceAbove = rect.top;
+
+        if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
+          setDropDirection("dropup");
+        } else {
+          setDropDirection("dropdown");
+        }
+      });
+    } else {
+      setDropDirection("dropdown");
+    }
+  };
+
+
+
+
+  
+  return (
+    <div
+      className="status-dropdown-container"
+      ref={dropdownRef}
+      style={{ position: "relative", zIndex: 10 }}
+    >
+      <Dropdown
+        onSelect={onStatusChange}
+        disabled={disabled}
+        onToggle={handleDropdownToggle}
+        drop={dropDirection}
+      >
+        <Dropdown.Toggle
+          variant={config.variant}
+          size="sm"
+          className="status-dropdown-toggle d-flex align-items-center"
+          disabled={disabled}
+        >
+          <IconComponent className="me-1" size={12} />
+          {config.label}
+        </Dropdown.Toggle>
+
+        <Dropdown.Menu
+          className="status-dropdown-menu"
+          renderOnMount
+          popperConfig={{
+            modifiers: [
+              {
+                name: "preventOverflow",
+                options: { boundary: "window" },
+              },
+              {
+                name: "offset",
+                options: { offset: [0, 8] },
+              },
+            ],
+          }}
+          containerPadding={10}
+          style={{
+            position: "fixed",
+            zIndex: 9999,
+          }}
+        >
+          {STATUS_OPTIONS.map((statusKey) => {
+            const statusConfig = STATUS_CONFIG[statusKey];
+            const StatusIcon = statusConfig.icon;
+            return (
+              <Dropdown.Item
+                key={statusKey}
+                eventKey={statusKey}
+                active={statusKey === status}
+                className="d-flex align-items-center"
+              >
+                <StatusIcon
+                  className="me-2"
+                  size={12}
+                  style={{ color: statusConfig.color }}
+                />
+                {statusConfig.label}
+              </Dropdown.Item>
+            );
+          })}
+        </Dropdown.Menu>
+      </Dropdown>
+    </div>
+  );
+};
+
+// Composant pour les boutons d'action
+const ActionButtons = ({ reclamation, onView, onDelete }) => (
+  <div className="action-buttons d-flex gap-2">
+    <OverlayTrigger
+      placement="top"
+      overlay={<Tooltip>Voir les détails</Tooltip>}
+    >
+      <Button
+        variant="outline-primary"
+        size="sm"
+        className="action-btn view-btn"
+        onClick={() => onView(reclamation)}
+      >
+        <FaEye />
+      </Button>
+    </OverlayTrigger>
+    
+    <OverlayTrigger
+      placement="top"
+      overlay={<Tooltip>Supprimer la réclamation</Tooltip>}
+    >
+      <Button
+        variant="outline-danger"
+        size="sm"
+        className="action-btn delete-btn"
+        onClick={() => onDelete(reclamation.id)}
+      >
+        <FaTrash />
+      </Button>
+    </OverlayTrigger>
+  </div>
+);
+
+// Composant pour l'en-tête de colonne triable
+const SortableHeader = ({ column, currentSort, currentDir, onSort, children }) => (
+  <th
+    className="sortable-header"
+    onClick={() => onSort(column)}
+    style={{ cursor: "pointer" }}
+  >
+    <div className="d-flex align-items-center justify-content-between">
+      <span>{children}</span>
+      <span className="sort-icon">
+        {currentSort === column ? (
+          currentDir === "asc" ? <FaSortUp /> : <FaSortDown />
+        ) : (
+          <FaSort className="text-muted" />
+        )}
+      </span>
+    </div>
+  </th>
+);
+
+// Modal de confirmation
+const ConfirmationModal = ({ show, onHide, onConfirm, title, message, variant = "danger" }) => (
+  <Modal show={show} onHide={onHide} centered>
+    <Modal.Header closeButton className="border-0">
+      <Modal.Title className="d-flex align-items-center">
+        <FaExclamationTriangle className="me-2" style={{ color: variant === "danger" ? "#dc3545" : "#ffc107" }} />
+        {title}
+      </Modal.Title>
+    </Modal.Header>
+    <Modal.Body className="px-4 pb-4">
+      <p className="mb-0">{message}</p>
+    </Modal.Body>
+    <Modal.Footer className="border-0 pt-0">
+      <Button variant="outline-secondary" onClick={onHide}>
+        Annuler
+      </Button>
+      <Button variant={variant} onClick={onConfirm}>
+        Confirmer
+      </Button>
+    </Modal.Footer>
+  </Modal>
+);
+
 const AdminReclamations = () => {
+  // États principaux
   const [search, setSearch] = useState("");
   const [reclamations, setReclamations] = useState([]);
   const [filtered, setFiltered] = useState([]);
@@ -42,423 +327,501 @@ const AdminReclamations = () => {
   const [sortBy, setSortBy] = useState("date");
   const [sortDir, setSortDir] = useState("desc");
   const [statusStats, setStatusStats] = useState({});
-  const navigate = useNavigate();
-  // For the popup modal
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  
+  // États pour les modals
   const [selectedReclamation, setSelectedReclamation] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showStatusConfirm, setShowStatusConfirm] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
+  
+  const navigate = useNavigate();
 
-  // Simulate API fetch
-  useEffect(() => {
-    const fetchReclamations = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get("/reclamations", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        // Map backend data to table fields
-        const data = res.data.data.data.map((r) => ({
-          id: r.id,
-          client:
-            r.client && r.client.personne
-              ? `${r.client.personne.nom} ${r.client.personne.prenom}`
-              : "-",
-          type: r.type_reclamation,
-          statut: r.statut,
-          compte_bancaire: r.compte_bancaire
-            ? r.compte_bancaire.numero_compte
-            : "-",
-          date: r.date_reception ? r.date_reception.slice(0, 10) : "",
-          description: r.description || "",
-          pieces_jointes: r.pieces_jointes || [],
-        }));
-        setReclamations(data);
-      } catch (err) {
-        setReclamations([]);
+  // Fonction pour récupérer les données
+  const fetchReclamations = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("Token d'authentification manquant");
       }
-    };
-    fetchReclamations();
+      
+      const response = await axios.get("/reclamations", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      const data = response.data.data.data.map(mapReclamationData);
+      setReclamations(data);
+    } catch (err) {
+      console.error("Erreur lors du chargement des réclamations:", err);
+      setError("Erreur lors du chargement des réclamations");
+      setReclamations([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  // Filter and sort
+  // Effet pour charger les données
+  useEffect(() => {
+    fetchReclamations();
+  }, [fetchReclamations]);
+
+  // Effet pour filtrer et trier
   useEffect(() => {
     let data = [...reclamations];
-    if (search) {
-      data = data.filter(
-        (r) =>
-          r.id.toString().includes(search) ||
-          r.client.toLowerCase().includes(search.toLowerCase()) ||
-          r.type.toLowerCase().includes(search.toLowerCase())
+    
+    // Filtrage
+    if (search.trim()) {
+      const searchLower = search.toLowerCase();
+      data = data.filter(r =>
+        r.id.toString().includes(search) ||
+        r.client.toLowerCase().includes(searchLower) ||
+        r.type.toLowerCase().includes(searchLower)
       );
     }
+    
+    // Tri
     data.sort((a, b) => {
-      if (sortBy === "date") {
-        return sortDir === "asc"
-          ? a.date.localeCompare(b.date)
-          : b.date.localeCompare(a.date);
-      } else if (sortBy === "id") {
-        return sortDir === "asc" ? a.id - b.id : b.id - a.id;
-      } else if (sortBy === "statut") {
-        return sortDir === "asc"
-          ? a.statut.localeCompare(b.statut)
-          : b.statut.localeCompare(a.statut);
+      let comparison = 0;
+      
+      switch (sortBy) {
+        case "date":
+          comparison = a.date.localeCompare(b.date);
+          break;
+        case "id":
+          comparison = a.id - b.id;
+          break;
+        case "statut":
+          comparison = a.statut.localeCompare(b.statut);
+          break;
+        case "client":
+          comparison = a.client.localeCompare(b.client);
+          break;
+        default:
+          return 0;
       }
-      else if (sortBy === "statut") {
-        return sortDir === "asc"
-          ? a.statut.localeCompare(b.statut)
-          : b.statut.localeCompare(a.statut);
-      }
-      else if (sortBy === "client") {
-        return sortDir === "asc"
-          ? a.client.localeCompare(b.client)
-          : b.client.localeCompare(a.client);
-      }
-      return 0;
+      
+      return sortDir === "asc" ? comparison : -comparison;
     });
+    
     setFiltered(data);
-    // Stats
-    const stats = {};
-    STATUS_OPTIONS.forEach((s) => (stats[s] = 0));
-    data.forEach((r) => (stats[r.statut]++));
-    setStatusStats(stats);
-    setPage(1); // Reset to first page on filter/sort
+    setStatusStats(calculateStatusStats(data));
+    setPage(1);
   }, [search, sortBy, sortDir, reclamations]);
 
   // Pagination
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
 
-  // Inline status update
-  const handleStatusChange = async (id, newStatus) => {
+  // Gestionnaires d'événements
+  const handleSort = (column) => {
+    if (sortBy === column) {
+      setSortDir(dir => dir === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(column);
+      setSortDir("asc");
+    }
+  };
+
+  const handleStatusChange = (id, newStatus) => {
+    setPendingAction({ type: 'status', id, newStatus });
+    setShowStatusConfirm(true);
+  };
+
+  const confirmStatusChange = async () => {
+    if (!pendingAction) return;
+    
+    const { id, newStatus } = pendingAction;
     const token = localStorage.getItem("token");
+    
     try {
       await axios.put(
         `/reclamations/${id}/statut`,
         { statut: newStatus, commentaire: "" },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      // Refetch to get updated data
-      const res = await axios.get("/reclamations", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = res.data.data.data.map((r) => ({
-        id: r.id,
-        client:
-          r.client && r.client.personne
-            ? `${r.client.personne.nom} ${r.client.personne.prenom}`
-            : "-",
-        type: r.type_reclamation,
-        statut: r.statut,
-        compte_bancaire: r.compte_bancaire
-          ? r.compte_bancaire.numero_compte
-          : "-",
-        date: r.date_reception ? r.date_reception.slice(0, 10) : "",
-        description: r.description || "",
-        pieces_jointes: r.pieces_jointes || [],
-      }));
-      setReclamations(data);
+      
+      await fetchReclamations();
       toast.success("Statut mis à jour avec succès");
     } catch (err) {
+      console.error("Erreur lors de la mise à jour du statut:", err);
       toast.error("Erreur lors de la mise à jour du statut");
+    } finally {
+      setShowStatusConfirm(false);
+      setPendingAction(null);
     }
   };
 
-  // Sorting handler
-  const handleSort = (col) => {
-    if (sortBy === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    else {
-      setSortBy(col);
-      setSortDir("asc");
-    }
+  const handleDelete = (id) => {
+    setPendingAction({ type: 'delete', id });
+    setShowDeleteConfirm(true);
   };
 
-  const handleDelete = async (id) => {
+  const confirmDelete = async () => {
+    if (!pendingAction) return;
+    
+    const { id } = pendingAction;
     const token = localStorage.getItem("token");
+    
     try {
       await axios.delete(`/reclamations/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      
+      await fetchReclamations();
       toast.success("Réclamation supprimée avec succès");
-      // Refetch to get updated data
-      const res = await axios.get("/reclamations", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = res.data.data.data.map((r) => ({
-        id: r.id,
-        client:
-          r.client && r.client.personne
-            ? `${r.client.personne.nom} ${r.client.personne.prenom}`
-            : "-",
-        type: r.type_reclamation,
-        statut: r.statut,
-        compte_bancaire: r.compte_bancaire
-          ? r.compte_bancaire.numero_compte
-          : "-",
-        date: r.date_reception ? r.date_reception.slice(0, 10) : "",
-        description: r.description || "",
-        pieces_jointes: r.pieces_jointes || [],
-      }));
-      setReclamations(data);
     } catch (err) {
+      console.error("Erreur lors de la suppression:", err);
       toast.error("Erreur lors de la suppression");
+    } finally {
+      setShowDeleteConfirm(false);
+      setPendingAction(null);
     }
   };
+
+  const handleViewDetails = (reclamation) => {
+    setSelectedReclamation(reclamation);
+    setShowDetails(true);
+  };
+
+  const clearSearch = () => {
+    setSearch("");
+  };
+
+  if (loading) {
+    return (
+      <>
+        <AdminSidebar />
+        <div className="container py-4">
+          <div className="d-flex justify-content-center align-items-center" style={{ height: "400px" }}>
+            <div className="text-center">
+              <Spinner animation="border" variant="primary" />
+              <p className="mt-3 text-muted">Chargement des réclamations...</p>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
       <AdminSidebar />
-      <div className="container py-4">
-        <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
-          <h2 className="fw-bold mb-0" style={{ color: "#115e8bff" }}>
-            Réclamations
-          </h2>
-          <Button
-            variant="primary"
-            style={{ background: "#115e8bff", border: "none" }}
-            onClick={() => navigate("/admin/reclamations/ajouter")}
-          >
-            Ajouter une réclamation
-          </Button>
-        </div>
-        <Row className="mb-4 g-3">
-          {STATUS_OPTIONS.map((status) => (
-            <Col xs={6} md={2} key={status}>
-              <Card className="text-center shadow-sm">
-                <Card.Body>
-                  <Card.Subtitle
-                    className="mb-2"
-                    style={{ color: "#115e8bff" }}
-                  >
-                    {status.charAt(0).toUpperCase() + status.slice(1)}
-                  </Card.Subtitle>
-                  <span className={`badge bg-${statusColors[status]}`}>
-                    {statusStats[status] || 0}
-                  </span>
-                </Card.Body>
-              </Card>
-            </Col>
-          ))}
-        </Row>
-        <div className="mb-3">
-          <InputGroup>
-            <Form.Control
-              placeholder="Rechercher par ID, client, type..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <Button
-              variant="outline-secondary"
-              onClick={() => setSearch("")}
-              title="Effacer"
-            >
-              <span aria-hidden>×</span>
-            </Button>
-          </InputGroup>
-        </div>
-        <div className="table-responsive">
-          <Table hover className="align-middle">
-            <thead>
-              <tr>
-                <th
-                  style={{ cursor: "pointer" }}
-                  title="Trier par ID"
-                  onClick={() => handleSort("id")}
-                >
-                  ID {sortBy === "id" && (sortDir === "asc" ? "▲" : "▼")}
-                </th>
-
-                <th
-                  style={{ cursor: "pointer" }}
-                  title="Trier par nom du client"
-                  onClick={() => handleSort("client")}
-                >
-                  Client{" "}
-                  {sortBy === "client" && (sortDir === "asc" ? "▲" : "▼")}
-                </th>
-
-                <th>Type</th>
-                <th
-                  style={{ cursor: "pointer" }}
-                  title="Trier par statut"
-                  onClick={() => handleSort("statut")}
-                >
-                  Statut{" "}
-                  {sortBy === "statut" && (sortDir === "asc" ? "▲" : "▼")}
-                </th>
-                <th
-                  style={{ cursor: "pointer" }}
-                  title="Trier par date de réception"
-                  onClick={() => handleSort("date")}
-                >
-                  Date de réception{" "}
-                  {sortBy === "date" && (sortDir === "asc" ? "▲" : "▼")}
-                </th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginated.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="text-center text-muted">
-                    Aucune réclamation trouvée.
-                  </td>
-                </tr>
-              ) : (
-                paginated.map((r) => (
-                  <tr key={r.id}>
-                    <td>{r.id}</td>
-                    <td>{r.client}</td>
-                    <td>{r.type}</td>
-                    <td>
-                      <Dropdown onSelect={(s) => handleStatusChange(r.id, s)}>
-                        <Dropdown.Toggle
-                          size="sm"
-                          variant={statusColors[r.statut] || "secondary"}
-                          id={`dropdown-status-${r.id}`}
-                        >
-                          {r.statut}
-                        </Dropdown.Toggle>
-                        <Dropdown.Menu>
-                          {STATUS_OPTIONS.map((s) => (
-                            <Dropdown.Item
-                              key={s}
-                              eventKey={s}
-                              active={s === r.statut}
-                            >
-                              {s}
-                            </Dropdown.Item>
-                          ))}
-                        </Dropdown.Menu>
-                      </Dropdown>
-                    </td>
-                    <td>{r.date}</td>
-                    <td>
-                      <Button
-                        variant="outline-primary"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedReclamation(r); // r is the selected reclamation
-                          setShowDetails(true); // show the modal
-                        }}
-                      >
-                        Voir
-                      </Button>
-
-                      <Button
-                        variant="outline-danger"
-                        size="sm"
-                        onClick={() => handleDelete(r.id)}
-                      >
-                        Supprimer
-                      </Button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </Table>
-        </div>
-        <div className="d-flex justify-content-between align-items-center mt-3">
-          <div className="text-muted">
-            Page {page} sur {totalPages}
-          </div>
-          <Pagination className="mb-0">
-            <Pagination.First
-              onClick={() => setPage(1)}
-              disabled={page === 1}
-            />
-            <Pagination.Prev
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
-            />
-            {Array.from({ length: totalPages }, (_, i) => (
-              <Pagination.Item
-                key={i + 1}
-                active={i + 1 === page}
-                onClick={() => setPage(i + 1)}
+      <div className="admin-reclamations">
+        <div className="container-fluid py-4">
+          {/* Header */}
+          <div className="page-header mb-4">
+            <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
+              <div>
+                <h1 className="page-title mb-1">
+                  <FaFileAlt className="me-3" />
+                  Gestion des Réclamations
+                </h1>
+                <p className="page-subtitle mb-0">
+                  Consultez et gérez toutes les réclamations clients
+                </p>
+              </div>
+              <Button
+                variant="primary"
+                className="add-btn d-flex align-items-center"
+                onClick={() => navigate("/admin/reclamations/ajouter")}
               >
-                {i + 1}
-              </Pagination.Item>
+                <FaPlus className="me-2" />
+                Ajouter une réclamation
+              </Button>
+            </div>
+          </div>
+
+          {/* Error Alert */}
+          {error && (
+            <Alert variant="danger" dismissible onClose={() => setError("")} className="mb-4">
+              {error}
+            </Alert>
+          )}
+
+          {/* Stats Cards */}
+          <Row className="mb-4 g-3">
+            {STATUS_OPTIONS.map(status => (
+              <Col xs={6} lg={2} key={status}>
+                <StatusCard
+                  status={status}
+                  count={statusStats[status] || 0}
+                />
+              </Col>
             ))}
-            <Pagination.Next
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
-            />
-            <Pagination.Last
-              onClick={() => setPage(totalPages)}
-              disabled={page === totalPages}
-            />
-          </Pagination>
+          </Row>
+
+          {/* Search Bar */}
+          <Card className="search-card mb-4 border-0 shadow-sm">
+            <Card.Body>
+              <InputGroup className="search-input-group">
+                <InputGroup.Text className="search-icon">
+                  <FaSearch />
+                </InputGroup.Text>
+                <Form.Control
+                  placeholder="Rechercher par ID, client, type..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="search-input"
+                />
+                {search && (
+                  <Button
+                    variant="outline-secondary"
+                    onClick={clearSearch}
+                    className="clear-search-btn"
+                  >
+                    <FaTimes />
+                  </Button>
+                )}
+              </InputGroup>
+            </Card.Body>
+          </Card>
+
+          {/* Table */}
+          <Card className="table-card border-0 shadow-sm">
+            <Card.Body className="p-0">
+              <div className="table-responsive">
+                <Table hover className="reclamations-table mb-0">
+                  <thead className="table-header">
+                    <tr>
+                      <SortableHeader column="id" currentSort={sortBy} currentDir={sortDir} onSort={handleSort}>
+                        ID
+                      </SortableHeader>
+                      <SortableHeader column="client" currentSort={sortBy} currentDir={sortDir} onSort={handleSort}>
+                        Client
+                      </SortableHeader>
+                      <th>Type</th>
+                      <SortableHeader column="statut" currentSort={sortBy} currentDir={sortDir} onSort={handleSort}>
+                        Statut
+                      </SortableHeader>
+                      <SortableHeader column="date" currentSort={sortBy} currentDir={sortDir} onSort={handleSort}>
+                        Date de réception
+                      </SortableHeader>
+                      <th className="text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginated.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="text-center py-5">
+                          <div className="empty-state">
+                            <FaFileAlt size={48} className="text-muted mb-3" />
+                            <h5 className="text-muted">Aucune réclamation trouvée</h5>
+                            <p className="text-muted mb-0">
+                              {search ? "Essayez de modifier vos critères de recherche" : "Aucune réclamation n'a été créée"}
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      paginated.map((reclamation, index) => (
+                        <tr key={reclamation.id} className="table-row">
+                          <td className="fw-bold text-primary">#{reclamation.id}</td>
+                          <td>
+                            <div className="d-flex align-items-center">
+                              <FaUser className="me-2 text-muted" size={14} />
+                              {reclamation.client}
+                            </div>
+                          </td>
+                          <td>
+                            <Badge bg="light" text="dark" className="type-badge">
+                              {reclamation.type}
+                            </Badge>
+                          </td>
+                          <td>
+                            <StatusBadge
+                              status={reclamation.statut}
+                              onStatusChange={(newStatus) => handleStatusChange(reclamation.id, newStatus)}
+                              rowIndex={index}
+                            />
+                          </td>
+                          <td>
+                            <div className="d-flex align-items-center">
+                              <FaCalendarAlt className="me-2 text-muted" size={14} />
+                              {reclamation.date || "-"}
+                            </div>
+                          </td>
+                          <td className="text-center">
+                            <ActionButtons
+                              reclamation={reclamation}
+                              onView={handleViewDetails}
+                              onDelete={handleDelete}
+                            />
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </Table>
+              </div>
+            </Card.Body>
+          </Card>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="d-flex justify-content-between align-items-center mt-4">
+              <div className="pagination-info text-muted">
+                Affichage de {(page - 1) * PAGE_SIZE + 1} à {Math.min(page * PAGE_SIZE, filtered.length)} sur {filtered.length} résultats
+              </div>
+              <Pagination className="mb-0 custom-pagination">
+                <Pagination.First
+                  onClick={() => setPage(1)}
+                  disabled={page === 1}
+                />
+                <Pagination.Prev
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                />
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const pageNum = Math.max(1, Math.min(totalPages - 4, page - 2)) + i;
+                  return (
+                    <Pagination.Item
+                      key={pageNum}
+                      active={pageNum === page}
+                      onClick={() => setPage(pageNum)}
+                    >
+                      {pageNum}
+                    </Pagination.Item>
+                  );
+                })}
+                <Pagination.Next
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                />
+                <Pagination.Last
+                  onClick={() => setPage(totalPages)}
+                  disabled={page === totalPages}
+                />
+              </Pagination>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Modal de détails */}
       <Modal
         show={showDetails}
         onHide={() => setShowDetails(false)}
         centered
         size="lg"
+        className="details-modal"
       >
-        <Modal.Header closeButton>
-          <Modal.Title style={{ color: "#115e8bff" }}>
-            Détails de la réclamation
+        <Modal.Header closeButton className="details-modal-header">
+          <Modal.Title className="d-flex align-items-center">
+            <FaFileAlt className="me-2" />
+            Détails de la réclamation #{selectedReclamation?.id}
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body>
-          {selectedReclamation ? (
-            <>
-              <p>
-                <strong>ID:</strong> {selectedReclamation.id}
-              </p>
-              <p>
-                <strong>Client:</strong> {selectedReclamation.client}
-              </p>
-              <p>
-                <strong>Type:</strong> {selectedReclamation.type}
-              </p>
-              <p>
-                <strong>Statut:</strong> {selectedReclamation.statut}
-              </p>
-              <p>
-                <strong>Numero de compte:</strong>{" "}
-                {selectedReclamation.compte_bancaire}
-              </p>
-              <p>
-                <strong>Date de réception:</strong> {selectedReclamation.date}
-              </p>
-              <p>
-                <strong>Description:</strong> {selectedReclamation.description}
-              </p>
-              {selectedReclamation.pieces_jointes &&
-              selectedReclamation.pieces_jointes.length > 0 ? (
-                <>
-                  <p>
-                    <strong>Pièces jointes :</strong>
-                  </p>
-                  <ul>
-                    {selectedReclamation.pieces_jointes.map((pj, index) => (
-                      <li key={index}>
-                        <a
-                          href={`http://localhost:8000/api/pieces/download/${pj.id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {pj.description || `Fichier ${index + 1}`}
-                        </a>{" "}
-                        ({pj.type_fichier},{" "}
-                        {Math.round(pj.taille_fichier / 1024)} Ko)
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              ) : (
-                <p>
-                  <strong>Pièces jointes :</strong> Aucune
-                </p>
-              )}
-            </>
-          ) : (
-            <p>Aucune réclamation sélectionnée</p>
+        <Modal.Body className="details-modal-body">
+          {selectedReclamation && (
+            <Row className="g-4">
+              <Col md={6}>
+                <div className="detail-item">
+                  <label className="detail-label">
+                    <FaTag className="me-2" />
+                    ID de la réclamation
+                  </label>
+                  <div className="detail-value">#{selectedReclamation.id}</div>
+                </div>
+              </Col>
+              <Col md={6}>
+                <div className="detail-item">
+                  <label className="detail-label">
+                    <FaUser className="me-2" />
+                    Client
+                  </label>
+                  <div className="detail-value">{selectedReclamation.client}</div>
+                </div>
+              </Col>
+              <Col md={6}>
+                <div className="detail-item">
+                  <label className="detail-label">
+                    Type de réclamation
+                  </label>
+                  <div className="detail-value">
+                    <Badge bg="primary">{selectedReclamation.type}</Badge>
+                  </div>
+                </div>
+              </Col>
+              <Col md={6}>
+                <div className="detail-item">
+                  <label className="detail-label">
+                    Statut actuel
+                  </label>
+                  <div className="detail-value">
+                    <Badge bg={STATUS_CONFIG[selectedReclamation.statut]?.variant}>
+                      {STATUS_CONFIG[selectedReclamation.statut]?.label}
+                    </Badge>
+                  </div>
+                </div>
+              </Col>
+              <Col md={6}>
+                <div className="detail-item">
+                  <label className="detail-label">
+                    Numéro de compte
+                  </label>
+                  <div className="detail-value">{selectedReclamation.compte_bancaire}</div>
+                </div>
+              </Col>
+              <Col md={6}>
+                <div className="detail-item">
+                  <label className="detail-label">
+                    <FaCalendarAlt className="me-2" />
+                    Date de réception
+                  </label>
+                  <div className="detail-value">{selectedReclamation.date || "-"}</div>
+                </div>
+              </Col>
+              <Col xs={12}>
+                <div className="detail-item">
+                  <label className="detail-label">
+                    Description
+                  </label>
+                  <div className="detail-value description-text">
+                    {selectedReclamation.description || "Aucune description fournie"}
+                  </div>
+                </div>
+              </Col>
+              <Col xs={12}>
+                <div className="detail-item">
+                  <label className="detail-label">
+                    <FaFileAlt className="me-2" />
+                    Pièces jointes
+                  </label>
+                  <div className="detail-value">
+                    {selectedReclamation.pieces_jointes?.length > 0 ? (
+                      <div className="attachments-list">
+                        {selectedReclamation.pieces_jointes.map((pj, index) => (
+                          <div key={index} className="attachment-item">
+                            <FaDownload className="me-2" />
+                            <a
+                              href={`http://localhost:8000/api/pieces/download/${pj.id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="attachment-link"
+                            >
+                              {pj.description || `Fichier ${index + 1}`}
+                            </a>
+                            <small className="text-muted ms-2">
+                              ({pj.type_fichier}, {Math.round(pj.taille_fichier / 1024)} Ko)
+                            </small>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-muted">Aucune pièce jointe</span>
+                    )}
+                  </div>
+                </div>
+              </Col>
+            </Row>
           )}
         </Modal.Body>
-        <Modal.Footer>
+        <Modal.Footer className="details-modal-footer">
           <Button
             variant="outline-primary"
             onClick={() => setShowDetails(false)}
@@ -467,8 +830,28 @@ const AdminReclamations = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+
+      {/* Modal de confirmation de suppression */}
+      <ConfirmationModal
+        show={showDeleteConfirm}
+        onHide={() => setShowDeleteConfirm(false)}
+        onConfirm={confirmDelete}
+        title="Confirmer la suppression"
+        message="Êtes-vous sûr de vouloir supprimer cette réclamation ? Cette action est irréversible."
+        variant="danger"
+      />
+
+      {/* Modal de confirmation de changement de statut */}
+      <ConfirmationModal
+        show={showStatusConfirm}
+        onHide={() => setShowStatusConfirm(false)}
+        onConfirm={confirmStatusChange}
+        title="Confirmer le changement de statut"
+        message={`Êtes-vous sûr de vouloir changer le statut vers "${STATUS_CONFIG[pendingAction?.newStatus]?.label}" ?`}
+        variant="warning"
+      />
     </>
   );
 };
 
-export default AdminReclamations; 
+export default AdminReclamations;
