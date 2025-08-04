@@ -42,7 +42,7 @@ import AdminSidebar from "../components/AdminSidebar";
 import axios from "../api/axios";
 import { toast } from "react-toastify";
 import "./AdminReclamations.css";
-
+import { createPortal } from "react-dom";
 // Configuration des statuts avec couleurs et icônes
 const STATUS_CONFIG = {
   "en attente": {
@@ -144,47 +144,50 @@ const StatusCard = ({ status, count, onClick }) => {
 };
 
 // Composant pour le badge de statut avec positionnement dynamique
-const StatusBadge = ({ status, onStatusChange, disabled = false, rowIndex = 0 }) => {
+const StatusBadge = ({
+  status,
+  onStatusChange,
+  disabled = false,
+  rowIndex = 0,
+}) => {
   const config = STATUS_CONFIG[status];
   const IconComponent = config.icon;
+  const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
-  const [dropDirection, setDropDirection] = useState('dropdown');
 
-  // Fonction pour calculer la position et déterminer la direction du dropdown
-  const handleDropdownToggle = (isOpen) => {
-    if (isOpen && dropdownRef.current) {
-      requestAnimationFrame(() => {
-        const rect = dropdownRef.current.getBoundingClientRect();
-        const dropdownHeight = 200;
-        const spaceBelow = window.innerHeight - rect.bottom;
-        const spaceAbove = rect.top;
+  // Handle dropdown toggle and row z-index
+  const handleToggle = (isOpening) => {
+    setIsOpen(isOpening);
 
-        if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
-          setDropDirection("dropup");
-        } else {
-          setDropDirection("dropdown");
-        }
-      });
-    } else {
-      setDropDirection("dropdown");
+    // Add/remove class to parent row for z-index management
+    const tableRow = dropdownRef.current?.closest(".table-row");
+    if (tableRow) {
+      if (isOpening) {
+        tableRow.classList.add("dropdown-open");
+      } else {
+        tableRow.classList.remove("dropdown-open");
+      }
     }
   };
 
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      const tableRow = dropdownRef.current?.closest(".table-row");
+      if (tableRow) {
+        tableRow.classList.remove("dropdown-open");
+      }
+    };
+  }, []);
 
-
-
-  
   return (
-    <div
-      className="status-dropdown-container"
-      ref={dropdownRef}
-      style={{ position: "relative", zIndex: 10 }}
-    >
+    <div className="status-dropdown-container" ref={dropdownRef}>
       <Dropdown
         onSelect={onStatusChange}
         disabled={disabled}
-        onToggle={handleDropdownToggle}
-        drop={dropDirection}
+        autoClose="outside"
+        show={isOpen}
+        onToggle={handleToggle}
       >
         <Dropdown.Toggle
           variant={config.variant}
@@ -198,24 +201,37 @@ const StatusBadge = ({ status, onStatusChange, disabled = false, rowIndex = 0 })
 
         <Dropdown.Menu
           className="status-dropdown-menu"
-          renderOnMount
           popperConfig={{
+            strategy: "fixed", // Use fixed positioning
             modifiers: [
               {
                 name: "preventOverflow",
-                options: { boundary: "window" },
+                options: {
+                  boundary: "viewport",
+                  padding: 8,
+                },
+              },
+              {
+                name: "flip",
+                options: {
+                  fallbackPlacements: [
+                    "bottom",
+                    "top",
+                    "bottom-start",
+                    "top-start",
+                  ],
+                },
               },
               {
                 name: "offset",
-                options: { offset: [0, 8] },
+                options: {
+                  offset: [0, 8],
+                },
               },
             ],
           }}
-          containerPadding={10}
-          style={{
-            position: "fixed",
-            zIndex: 9999,
-          }}
+          renderOnMount={true}
+          flip={true}
         >
           {STATUS_OPTIONS.map((statusKey) => {
             const statusConfig = STATUS_CONFIG[statusKey];

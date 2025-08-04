@@ -158,13 +158,16 @@
 .table-card {
   border-radius: 16px !important;
   background: #ffffff;
-  overflow: visible;
+  overflow: visible !important; /* Changed from hidden */
+  position: relative !important;
+
 }
 
 .reclamations-table {
-    overflow: visible !important;
-    border-collapse: separate;
-    border-spacing: 0;
+      overflow: visible !important;
+      position: relative !important;
+      border-collapse: separate;
+      border-spacing: 0;
 }
 
 .table-header {
@@ -208,12 +211,15 @@
 }
 
 .table-row {
+  position: relative;
+  z-index: 1;
   transition: all 0.2s ease;
 }
 
 .table-row:hover {
   background: rgba(17, 94, 139, 0.05) !important;
   transform: scale(1.001);
+  z-index: 2;
 }
 
 .table-row td {
@@ -239,6 +245,8 @@
   border-radius: 8px !important;
   font-size: 0.85rem !important;
   transition: all 0.3s ease !important;
+  position: relative;
+  z-index: 1001;
 }
 
 .status-dropdown-toggle:after {
@@ -246,11 +254,16 @@
 }
 
 .status-dropdown-menu {
+  z-index: 9999 !important;
   border: none !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15) !important;
   border-radius: 12px !important;
   padding: 0.5rem !important;
   margin-top: 0.5rem !important;
+  position: absolute !important;
+  /* Ensure it's positioned relative to viewport, not table */
+  transform: translateZ(0); /* Force hardware acceleration */
+  will-change: transform; /* Optimize for animations */
 }
 
 .status-dropdown-menu .dropdown-item {
@@ -259,6 +272,8 @@
   margin-bottom: 0.25rem !important;
   font-size: 0.9rem !important;
   transition: all 0.2s ease !important;
+  position: relative;
+  z-index: 10000;
 }
 
 .status-dropdown-menu .dropdown-item:hover {
@@ -537,6 +552,17 @@
   .d-flex.justify-content-between.align-items-center.mt-4 {
     flex-direction: column;
   }
+    .table-responsive {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+  }
+  
+  .status-dropdown-menu {
+    /* On mobile, ensure dropdown doesn't go off-screen */
+    max-width: 200px;
+    left: auto !important;
+    right: 0 !important;
+  }
 }
 
 @media (max-width: 576px) {
@@ -554,6 +580,7 @@
   }
 
   .reclamations-table {
+
     font-size: 0.85rem;
   }
 
@@ -624,17 +651,32 @@
   margin-left: 0.5rem;
 }
 
-.status-dropdown-menu {
-    z-index: 9999 !important;
-    position: fixed !important; /* not absolute! */
-}
-
-.reclamations-table,
-.table-responsive,
-.reclamations-table tbody td {
+.table-responsive{
   overflow: visible !important;
   position: relative !important;
-  z-index: 0;
 }
 
 
+.table-row.dropdown-open {
+  z-index: 1050 !important;
+  position: relative;
+}
+
+.dropdown-menu.show {
+  z-index: 9999 !important;
+  position: absolute !important;
+}
+
+.table-card .card-body {
+  overflow: visible !important;
+  position: relative !important;
+}
+
+.dropdown-backdrop {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1040;
+}
