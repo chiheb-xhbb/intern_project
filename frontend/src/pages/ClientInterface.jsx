@@ -13,6 +13,11 @@ import {
   Spinner,
   Alert,
   Container,
+  Form,
+  InputGroup,
+  Dropdown,
+  ButtonGroup,
+  Collapse,
 } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import {
@@ -30,6 +35,13 @@ import {
   FaTag,
   FaSignOutAlt,
   FaUniversity,
+  FaFilter,
+  FaSortAmountDown,
+  FaSortAmountUp,
+  FaTimes,
+  FaSearch,
+  FaChevronUp,
+  FaChevronDown,
 } from "react-icons/fa";
 import axios from "../api/axios";
 import { toast } from "react-toastify";
@@ -77,6 +89,19 @@ const mapReclamationData = (apiData) => ({
   pieces_jointes: apiData.pieces_jointes || [],
 });
 
+// Helper function to format date for display
+const formatDate = (dateString) => {
+  if (!dateString) return "Date non disponible";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("fr-FR");
+};
+
+// Helper function to parse date for comparison
+const parseDate = (dateString) => {
+  if (!dateString) return new Date(0);
+  return new Date(dateString);
+};
+
 // Client Navbar Component
 const ClientNavbar = ({ clientName, onLogout }) => (
   <Navbar className="client-navbar" expand="lg">
@@ -112,6 +137,228 @@ const ClientNavbar = ({ clientName, onLogout }) => (
   </Navbar>
 );
 
+// Filters Component
+const FiltersSection = ({
+  filters,
+  onFiltersChange,
+  onClearFilters,
+  filteredCount,
+  totalCount,
+  showFilters,
+  onToggleFilters,
+  availableTypes,
+}) => {
+  const handleStatusChange = (status) => {
+    const newStatuses = filters.statuses.includes(status)
+      ? filters.statuses.filter((s) => s !== status)
+      : [...filters.statuses, status];
+
+    onFiltersChange({ ...filters, statuses: newStatuses });
+  };
+
+  const handleTypeChange = (type) => {
+    const newTypes = filters.types.includes(type)
+      ? filters.types.filter((t) => t !== type)
+      : [...filters.types, type];
+
+    onFiltersChange({ ...filters, types: newTypes });
+  };
+
+  const handleSortChange = (sortBy, sortOrder) => {
+    onFiltersChange({ ...filters, sortBy, sortOrder });
+  };
+
+  const hasActiveFilters =
+    filters.statuses.length > 0 ||
+    filters.types.length > 0 ||
+    filters.dateFrom ||
+    filters.dateTo ||
+    filters.sortBy !== "date" ||
+    filters.sortOrder !== "desc";
+
+  return (
+    <Card className="filters-card">
+      <Card.Body className="filters-body">
+        <div className="filters-header">
+          <Button
+            variant="link"
+            onClick={onToggleFilters}
+            className="filters-toggle-btn"
+          >
+            <h6 className="filters-title">
+              <FaFilter className="filters-icon" />
+              Filtres et tri
+              {showFilters ? (
+                <FaChevronUp className="toggle-icon" />
+              ) : (
+                <FaChevronDown className="toggle-icon" />
+              )}
+            </h6>
+          </Button>
+          {hasActiveFilters && (
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              onClick={onClearFilters}
+              className="clear-filters-btn"
+            >
+              <FaTimes className="btn-icon" />
+              Effacer
+            </Button>
+          )}
+        </div>
+
+        <Collapse in={showFilters}>
+          <div>
+            <Row className="filters-content g-3">
+              {/* Status Filter */}
+              <Col lg={3} md={6}>
+                <Form.Label className="filter-label">Statut</Form.Label>
+                <div className="status-checkboxes">
+                  {Object.entries(STATUS_CONFIG).map(([key, config]) => (
+                    <Form.Check
+                      key={key}
+                      type="checkbox"
+                      id={`status-${key}`}
+                      label={config.label}
+                      checked={filters.statuses.includes(key)}
+                      onChange={() => handleStatusChange(key)}
+                      className="status-checkbox"
+                    />
+                  ))}
+                </div>
+              </Col>
+
+              {/* Type Filter */}
+              <Col lg={3} md={6}>
+                <Form.Label className="filter-label">
+                  Type de réclamation
+                </Form.Label>
+                <div className="type-checkboxes">
+                  {availableTypes.map((type) => (
+                    <Form.Check
+                      key={type}
+                      type="checkbox"
+                      id={`type-${type}`}
+                      label={type}
+                      checked={filters.types.includes(type)}
+                      onChange={() => handleTypeChange(type)}
+                      className="type-checkbox"
+                    />
+                  ))}
+                  {availableTypes.length === 0 && (
+                    <small className="text-muted">Aucun type disponible</small>
+                  )}
+                </div>
+              </Col>
+
+              {/* Date Range Filter */}
+              <Col lg={3} md={6}>
+                <Form.Label className="filter-label">Période</Form.Label>
+                <div className="date-inputs">
+                  <Form.Control
+                    type="date"
+                    size="sm"
+                    value={filters.dateFrom}
+                    onChange={(e) =>
+                      onFiltersChange({ ...filters, dateFrom: e.target.value })
+                    }
+                    placeholder="Date de début"
+                    className="date-input"
+                  />
+                  <Form.Control
+                    type="date"
+                    size="sm"
+                    value={filters.dateTo}
+                    onChange={(e) =>
+                      onFiltersChange({ ...filters, dateTo: e.target.value })
+                    }
+                    placeholder="Date de fin"
+                    className="date-input"
+                  />
+                </div>
+              </Col>
+
+              {/* Sort Options */}
+              <Col lg={3} md={6}>
+                <Form.Label className="filter-label">Trier par</Form.Label>
+                <div className="sort-controls">
+                  <Dropdown as={ButtonGroup} className="sort-dropdown">
+                    <Dropdown.Toggle variant="outline-primary" size="sm">
+                      {filters.sortBy === "date" ? "Date" : "Statut"}
+                      {filters.sortOrder === "desc" ? (
+                        <FaSortAmountDown className="sort-icon" />
+                      ) : (
+                        <FaSortAmountUp className="sort-icon" />
+                      )}
+                    </Dropdown.Toggle>
+                    <Dropdown.Menu>
+                      <Dropdown.Item
+                        onClick={() => handleSortChange("date", "desc")}
+                        active={
+                          filters.sortBy === "date" &&
+                          filters.sortOrder === "desc"
+                        }
+                      >
+                        <FaSortAmountDown className="dropdown-icon" />
+                        Date (récent d'abord)
+                      </Dropdown.Item>
+                      <Dropdown.Item
+                        onClick={() => handleSortChange("date", "asc")}
+                        active={
+                          filters.sortBy === "date" &&
+                          filters.sortOrder === "asc"
+                        }
+                      >
+                        <FaSortAmountUp className="dropdown-icon" />
+                        Date (ancien d'abord)
+                      </Dropdown.Item>
+                      <Dropdown.Item
+                        onClick={() => handleSortChange("status", "asc")}
+                        active={
+                          filters.sortBy === "status" &&
+                          filters.sortOrder === "asc"
+                        }
+                      >
+                        <FaSortAmountUp className="dropdown-icon" />
+                        Statut (A-Z)
+                      </Dropdown.Item>
+                      <Dropdown.Item
+                        onClick={() => handleSortChange("status", "desc")}
+                        active={
+                          filters.sortBy === "status" &&
+                          filters.sortOrder === "desc"
+                        }
+                      >
+                        <FaSortAmountDown className="dropdown-icon" />
+                        Statut (Z-A)
+                      </Dropdown.Item>
+                    </Dropdown.Menu>
+                  </Dropdown>
+                </div>
+              </Col>
+            </Row>
+
+            {/* Results Summary */}
+            <div className="filters-summary">
+              <small className="text-muted">
+                <FaSearch className="summary-icon" />
+                Affichage de {filteredCount} résultat(s) sur {totalCount}{" "}
+                réclamation(s)
+                {hasActiveFilters && (
+                  <Badge bg="primary" className="active-filters-badge">
+                    Filtres actifs
+                  </Badge>
+                )}
+              </small>
+            </div>
+          </div>
+        </Collapse>
+      </Card.Body>
+    </Card>
+  );
+};
+
 // Reclamation Card Component
 const ReclamationCard = ({ reclamation, onViewDetails }) => {
   const config = STATUS_CONFIG[reclamation.statut];
@@ -136,7 +383,7 @@ const ReclamationCard = ({ reclamation, onViewDetails }) => {
         <div className="card-meta-section">
           <small className="meta-item">
             <FaCalendarAlt className="meta-icon" />
-            {reclamation.date || "Date non disponible"}
+            {formatDate(reclamation.date)}
           </small>
           <small className="meta-item">
             <FaTag className="meta-icon" />
@@ -170,16 +417,90 @@ const ReclamationCard = ({ reclamation, onViewDetails }) => {
 const ClientInterface = () => {
   // Main states
   const [reclamations, setReclamations] = useState([]);
+  const [filteredReclamations, setFilteredReclamations] = useState([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [clientName, setClientName] = useState("");
+
+  // Filter states
+  const [filters, setFilters] = useState({
+    statuses: [],
+    types: [],
+    dateFrom: "",
+    dateTo: "",
+    sortBy: "date",
+    sortOrder: "desc",
+  });
+  const [showFilters, setShowFilters] = useState(false);
+  const [availableTypes, setAvailableTypes] = useState([]);
 
   // Modal states
   const [selectedReclamation, setSelectedReclamation] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
 
   const navigate = useNavigate();
+
+  // Apply filters and sorting
+  const applyFilters = useCallback((data, currentFilters) => {
+    let filtered = [...data];
+
+    // Status filter
+    if (currentFilters.statuses.length > 0) {
+      filtered = filtered.filter((rec) =>
+        currentFilters.statuses.includes(rec.statut)
+      );
+    }
+
+    // Type filter
+    if (currentFilters.types.length > 0) {
+      filtered = filtered.filter((rec) =>
+        currentFilters.types.includes(rec.type)
+      );
+    }
+
+    // Date range filter
+    if (currentFilters.dateFrom) {
+      const fromDate = new Date(currentFilters.dateFrom);
+      filtered = filtered.filter((rec) => parseDate(rec.date) >= fromDate);
+    }
+
+    if (currentFilters.dateTo) {
+      const toDate = new Date(currentFilters.dateTo);
+      toDate.setHours(23, 59, 59, 999); // Include the entire day
+      filtered = filtered.filter((rec) => parseDate(rec.date) <= toDate);
+    }
+
+    // Sort
+    filtered.sort((a, b) => {
+      let comparison = 0;
+
+      if (currentFilters.sortBy === "date") {
+        const dateA = parseDate(a.date);
+        const dateB = parseDate(b.date);
+        comparison = dateA - dateB;
+      } else if (currentFilters.sortBy === "status") {
+        comparison = a.statut.localeCompare(b.statut);
+      }
+
+      return currentFilters.sortOrder === "desc" ? -comparison : comparison;
+    });
+
+    return filtered;
+  }, []);
+
+  // Update filtered reclamations when filters or data change
+  useEffect(() => {
+    const filtered = applyFilters(reclamations, filters);
+    setFilteredReclamations(filtered);
+    setPage(1); // Reset to first page when filtering
+
+    // Extract unique types from reclamations
+    const uniqueTypes = [
+      ...new Set(reclamations.map((rec) => rec.type)),
+    ].sort();
+    setAvailableTypes(uniqueTypes);
+  }, [reclamations, filters, applyFilters]);
 
   // Fetch client data
   const fetchClientData = useCallback(async () => {
@@ -243,11 +564,11 @@ const ClientInterface = () => {
   }, [fetchClientData, fetchReclamations]);
 
   // Pagination
-  const paginated = reclamations.slice(
+  const paginated = filteredReclamations.slice(
     (page - 1) * PAGE_SIZE,
     page * PAGE_SIZE
   );
-  const totalPages = Math.ceil(reclamations.length / PAGE_SIZE);
+  const totalPages = Math.ceil(filteredReclamations.length / PAGE_SIZE);
 
   // Event handlers
   const handleViewDetails = (reclamation) => {
@@ -259,6 +580,21 @@ const ClientInterface = () => {
     localStorage.removeItem("token");
     toast.success("Déconnexion réussie");
     navigate("/login");
+  };
+
+  const handleFiltersChange = (newFilters) => {
+    setFilters(newFilters);
+  };
+
+  const handleClearFilters = () => {
+    setFilters({
+      statuses: [],
+      types: [],
+      dateFrom: "",
+      dateTo: "",
+      sortBy: "date",
+      sortOrder: "desc",
+    });
   };
 
   if (loading) {
@@ -322,8 +658,22 @@ const ClientInterface = () => {
             </Alert>
           )}
 
+          {/* Filters Section */}
+          {reclamations.length > 0 && (
+            <FiltersSection
+              filters={filters}
+              onFiltersChange={handleFiltersChange}
+              onClearFilters={handleClearFilters}
+              filteredCount={filteredReclamations.length}
+              totalCount={reclamations.length}
+              showFilters={showFilters}
+              onToggleFilters={() => setShowFilters(!showFilters)}
+              availableTypes={availableTypes}
+            />
+          )}
+
           {/* Reclamations List */}
-          {paginated.length === 0 ? (
+          {reclamations.length === 0 ? (
             <Card className="empty-state-card">
               <Card.Body className="empty-state-body">
                 <div className="empty-state-content">
@@ -341,6 +691,26 @@ const ClientInterface = () => {
                   >
                     <FaPlus className="btn-icon" />
                     Créer ma première réclamation
+                  </Button>
+                </div>
+              </Card.Body>
+            </Card>
+          ) : filteredReclamations.length === 0 ? (
+            <Card className="empty-state-card">
+              <Card.Body className="empty-state-body">
+                <div className="empty-state-content">
+                  <FaSearch className="empty-state-icon" />
+                  <h5 className="empty-state-title">Aucun résultat trouvé</h5>
+                  <p className="empty-state-text">
+                    Aucune réclamation ne correspond aux critères de recherche
+                  </p>
+                  <Button
+                    variant="outline-primary"
+                    className="empty-state-btn"
+                    onClick={handleClearFilters}
+                  >
+                    <FaTimes className="btn-icon" />
+                    Effacer les filtres
                   </Button>
                 </div>
               </Card.Body>
@@ -365,8 +735,8 @@ const ClientInterface = () => {
             <div className="pagination-container">
               <div className="pagination-info">
                 Affichage de {(page - 1) * PAGE_SIZE + 1} à{" "}
-                {Math.min(page * PAGE_SIZE, reclamations.length)} sur{" "}
-                {reclamations.length} résultats
+                {Math.min(page * PAGE_SIZE, filteredReclamations.length)} sur{" "}
+                {filteredReclamations.length} résultats
               </div>
               <Pagination className="custom-pagination">
                 <Pagination.First
@@ -457,7 +827,7 @@ const ClientInterface = () => {
                     Date de réception
                   </label>
                   <div className="detail-value">
-                    {selectedReclamation.date || "Date non disponible"}
+                    {formatDate(selectedReclamation.date)}
                   </div>
                 </div>
               </Col>
