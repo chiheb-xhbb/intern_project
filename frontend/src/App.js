@@ -5,12 +5,13 @@ import AdminDashboard from "./pages/AdminDashboard.jsx"; // ← fusion des impor
 import AdminReclamations from "./pages/AdminReclamations";
 import AjouterReclamation from "./pages/AjouterReclamation";
 import AdminClients from "./pages/AdminClients";
+import ClientInterface from "./pages/ClientInterface";
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/client-home" element={<ClientHome />} />
+        <Route path="/ClientInterface" element={<ClientInterface />} />
         <Route path="/dashboard" element={<AdminDashboard />} />{" "}
         {/* ← route fusionnée */}
         <Route path="/admin/reclamations" element={<AdminReclamations />} />

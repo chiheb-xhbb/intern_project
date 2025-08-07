@@ -22,7 +22,7 @@ const Login = () => {
       if (user.admin) {
         navigate("/dashboard"); // page admin
       } else if (user.client) {
-        navigate("/client-home"); // page client
+        navigate("/ClientInterface"); // page client
       } else {
         setError("Aucun rôle associé.");
       }
