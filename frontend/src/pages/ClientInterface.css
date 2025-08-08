@@ -1382,7 +1382,7 @@
 /* ===== ADDITIONAL UTILITY CLASSES ===== */
 .text-truncate-2 {
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  /*-webkit-line-clamp: 2;*/
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -1458,3 +1458,88 @@
     border: 1px solid #ccc !important;
   }
 }
+
+/* ===== BRAND LOGO ===== */
+.brand-logo {
+  height: 55px;
+  width: auto;
+  max-width: 200px;
+  object-fit: contain;
+  transition: var(--transition);
+}
+
+.brand-logo:hover {
+  transform: scale(1.05);
+}
+
+/* Responsive adjustments for the logo */
+@media (max-width: 768px) {
+  .brand-logo {
+    height: 35px;
+    max-width: 150px;
+  }
+}
+
+@media (max-width: 576px) {
+  .brand-logo {
+    height: 30px;
+    max-width: 120px;
+  }
+}
+
+/* ===== NAVBAR CENTER TITLE ===== */
+.navbar-center-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  padding: 0.5rem 1rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.navbar-center-title:hover {
+  transform: translateX(-50%) translateY(-2px);
+
+  backdrop-filter: blur(10px);
+}
+
+.page-title-navbar {
+  color: var(--primary-color);
+  font-weight: 600;
+  margin: 0;
+  font-size: clamp(24px, 4vw, 32px);
+  letter-spacing: -0.5px;
+  text-align: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.page-title-navbar:hover {
+  color: var(--primary-color);
+  filter: brightness(1.1);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.page-title-navbar::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateX(-50%);
+}
+
+.page-title-navbar:hover::after {
+  width: 100%;
+}
+
+
+

@@ -132,9 +132,12 @@ const ClientNavbar = ({
     <Navbar className="client-navbar" expand="lg">
       <Container fluid>
         <Navbar.Brand className="navbar-brand-custom">
-          <FaUniversity className="brand-icon" />
-          <span className="brand-text">Banque de l'Habitat</span>
+          <img src="/IMAGES/logo.png" alt="Logo" className="brand-logo" />
         </Navbar.Brand>
+        {/* Center - Page Title */}
+        <div className="navbar-center-title d-none d-lg-block">
+          <h4 className="page-title-navbar">BH Réclamations</h4>
+        </div>
 
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
 
