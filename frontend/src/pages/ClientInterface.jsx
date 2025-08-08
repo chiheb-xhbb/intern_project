@@ -49,6 +49,8 @@ import {
   FaIdCard,
   FaMapMarkerAlt,
   FaEyeSlash,
+  FaCheck,
+  FaExclamationTriangle,
 } from "react-icons/fa";
 import axios from "../api/axios";
 import { toast } from "react-toastify";
@@ -85,6 +87,14 @@ const STATUS_CONFIG = {
 
 const PAGE_SIZE = 6;
 
+// Helper function to get full name
+const getFullName = (clientData) => {
+  if (!clientData) return "Client";
+  const nom = clientData.nom || "";
+  const prenom = clientData.prenom || "";
+  return `${prenom} ${nom}`.trim() || "Client";
+};
+
 // Helper function to map API data
 const mapReclamationData = (apiData) => ({
   id: apiData.id,
@@ -109,58 +119,76 @@ const parseDate = (dateString) => {
   return new Date(dateString);
 };
 
-// Client Navbar Component
+// Client Navbar Component - Fixed version without avatar
 const ClientNavbar = ({
-  clientName,
   clientData,
   onLogout,
   onViewProfile,
   onChangePassword,
-}) => (
-  <Navbar className="client-navbar" expand="lg">
-    <Container fluid>
-      <Navbar.Brand className="navbar-brand-custom">
-        <FaUniversity className="brand-icon" />
-        <span className="brand-text">Banque de l'Habitat</span>
-      </Navbar.Brand>
+}) => {
+  const fullName = getFullName(clientData);
 
-      <Navbar.Toggle aria-controls="basic-navbar-nav" />
+  return (
+    <Navbar className="client-navbar" expand="lg">
+      <Container fluid>
+        <Navbar.Brand className="navbar-brand-custom">
+          <FaUniversity className="brand-icon" />
+          <span className="brand-text">Banque de l'Habitat</span>
+        </Navbar.Brand>
 
-      <Navbar.Collapse id="basic-navbar-nav">
-        <Nav className="ms-auto">
-          <NavDropdown
-            title={
-              <span className="user-dropdown-title">
-                <FaUser className="user-icon" />
-                {clientName || "Client"}
-              </span>
-            }
-            id="user-dropdown"
-            align="end"
-            className="user-dropdown"
-          >
-            <NavDropdown.Item onClick={onViewProfile} className="profile-item">
-              <FaUserCircle className="dropdown-item-icon" />
-              Voir le profil
-            </NavDropdown.Item>
-            <NavDropdown.Item
-              onClick={onChangePassword}
-              className="password-item"
+        <Navbar.Toggle aria-controls="basic-navbar-nav" />
+
+        <Navbar.Collapse id="basic-navbar-nav">
+          <Nav className="ms-auto">
+            <NavDropdown
+              title={
+                <span className="user-dropdown-title d-flex align-items-center">
+                  <FaUser className="me-2" />
+                  <span className="user-name">{fullName}</span>
+                </span>
+              }
+              id="user-dropdown"
+              align="end"
+              className="user-dropdown"
             >
-              <FaKey className="dropdown-item-icon" />
-              Changer le mot de passe
-            </NavDropdown.Item>
-            <NavDropdown.Divider />
-            <NavDropdown.Item onClick={onLogout} className="logout-item">
-              <FaSignOutAlt className="dropdown-item-icon" />
-              Déconnexion
-            </NavDropdown.Item>
-          </NavDropdown>
-        </Nav>
-      </Navbar.Collapse>
-    </Container>
-  </Navbar>
-);
+              <div className="dropdown-header">
+                <div className="user-info-header">
+                  <FaUserCircle size={32} className="text-primary me-2" />
+                  <div className="user-details">
+                    <div className="user-name-large">{fullName}</div>
+                    <small className="user-email text-muted">
+                      {clientData?.email || "Email non disponible"}
+                    </small>
+                  </div>
+                </div>
+              </div>
+              <NavDropdown.Divider />
+              <NavDropdown.Item
+                onClick={onViewProfile}
+                className="profile-item"
+              >
+                <FaUserCircle className="dropdown-item-icon" />
+                Voir le profil
+              </NavDropdown.Item>
+              <NavDropdown.Item
+                onClick={onChangePassword}
+                className="password-item"
+              >
+                <FaKey className="dropdown-item-icon" />
+                Changer le mot de passe
+              </NavDropdown.Item>
+              <NavDropdown.Divider />
+              <NavDropdown.Item onClick={onLogout} className="logout-item">
+                <FaSignOutAlt className="dropdown-item-icon" />
+                Déconnexion
+              </NavDropdown.Item>
+            </NavDropdown>
+          </Nav>
+        </Navbar.Collapse>
+      </Container>
+    </Navbar>
+  );
+};
 
 // Profile Modal Component
 const ProfileModal = ({ show, onHide, clientData, loading }) => (
@@ -194,8 +222,8 @@ const ProfileModal = ({ show, onHide, clientData, loading }) => (
                 Nom complet
               </label>
               <div className="profile-value">
-                {clientData?.personne?.nom && clientData?.personne?.prenom
-                  ? `${clientData.personne.prenom} ${clientData.personne.nom}`
+                {clientData?.nom && clientData?.prenom
+                  ? `${clientData.prenom} ${clientData.nom}`
                   : "Non renseigné"}
               </div>
             </div>
@@ -218,7 +246,7 @@ const ProfileModal = ({ show, onHide, clientData, loading }) => (
                 Téléphone
               </label>
               <div className="profile-value">
-                {clientData?.personne?.telephone || "Non renseigné"}
+                {clientData?.telephone || "Non renseigné"}
               </div>
             </div>
           </Col>
@@ -226,10 +254,10 @@ const ProfileModal = ({ show, onHide, clientData, loading }) => (
             <div className="profile-field">
               <label className="profile-label">
                 <FaIdCard className="profile-icon" />
-                CIN
+                Numéro Client
               </label>
               <div className="profile-value">
-                {clientData?.personne?.cin || "Non renseigné"}
+                {clientData?.client?.numero_client || "Non renseigné"}
               </div>
             </div>
           </Col>
@@ -240,8 +268,8 @@ const ProfileModal = ({ show, onHide, clientData, loading }) => (
                 Date de naissance
               </label>
               <div className="profile-value">
-                {clientData?.personne?.date_naissance
-                  ? formatDate(clientData.personne.date_naissance)
+                {clientData?.client?.date_naissance
+                  ? formatDate(clientData.client.date_naissance)
                   : "Non renseigné"}
               </div>
             </div>
@@ -250,14 +278,10 @@ const ProfileModal = ({ show, onHide, clientData, loading }) => (
             <div className="profile-field">
               <label className="profile-label">
                 <FaUser className="profile-icon" />
-                Sexe
+                Segment Client
               </label>
               <div className="profile-value">
-                {clientData?.personne?.sexe
-                  ? clientData.personne.sexe === "M"
-                    ? "Masculin"
-                    : "Féminin"
-                  : "Non renseigné"}
+                {clientData?.client?.segment_client || "Non renseigné"}
               </div>
             </div>
           </Col>
@@ -268,7 +292,7 @@ const ProfileModal = ({ show, onHide, clientData, loading }) => (
                 Adresse
               </label>
               <div className="profile-value">
-                {clientData?.personne?.adresse || "Non renseigné"}
+                {clientData?.client?.adresse || "Non renseigné"}
               </div>
             </div>
           </Col>
@@ -300,7 +324,7 @@ const ProfileModal = ({ show, onHide, clientData, loading }) => (
   </Modal>
 );
 
-// Change Password Modal Component
+// Change Password Modal Component - Enhanced with professional error display
 const ChangePasswordModal = ({ show, onHide }) => {
   const [passwords, setPasswords] = useState({
     currentPassword: "",
@@ -314,6 +338,9 @@ const ChangePasswordModal = ({ show, onHide }) => {
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const [showErrorAlert, setShowErrorAlert] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handlePasswordChange = (field, value) => {
     setPasswords((prev) => ({
@@ -326,6 +353,11 @@ const ChangePasswordModal = ({ show, onHide }) => {
         ...prev,
         [field]: "",
       }));
+    }
+    // Hide error alert when user starts typing
+    if (showErrorAlert) {
+      setShowErrorAlert(false);
+      setErrorMessage("");
     }
   };
 
@@ -348,9 +380,6 @@ const ChangePasswordModal = ({ show, onHide }) => {
     } else if (passwords.newPassword.length < 8) {
       newErrors.newPassword =
         "Le mot de passe doit contenir au moins 8 caractères";
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(passwords.newPassword)) {
-      newErrors.newPassword =
-        "Le mot de passe doit contenir au moins une majuscule, une minuscule et un chiffre";
     }
 
     if (!passwords.confirmPassword) {
@@ -374,6 +403,8 @@ const ChangePasswordModal = ({ show, onHide }) => {
     if (!validateForm()) return;
 
     setLoading(true);
+    setShowErrorAlert(false);
+    setErrorMessage("");
 
     try {
       const token = localStorage.getItem("token");
@@ -389,17 +420,51 @@ const ChangePasswordModal = ({ show, onHide }) => {
         }
       );
 
+      // Show success alert instead of toast
+      setShowSuccessAlert(true);
+
+      // Also show toast for immediate feedback
       toast.success("Mot de passe modifié avec succès");
-      handleClose();
+
+      // Auto-hide the modal after 3 seconds to let user see the success message
+      setTimeout(() => {
+        handleClose();
+      }, 3000);
     } catch (err) {
       console.error("Erreur lors du changement de mot de passe:", err);
-      if (err.response?.status === 400) {
-        setErrors({ currentPassword: "Le mot de passe actuel est incorrect" });
-      } else if (err.response?.data?.message) {
-        toast.error(err.response.data.message);
-      } else {
-        toast.error("Erreur lors du changement de mot de passe");
+
+      let errorMsg =
+        "Une erreur s'est produite lors du changement de mot de passe";
+
+      if (err.response?.status === 400 || err.response?.status === 422) {
+        // Check for specific error messages from the API
+        if (err.response.data?.message) {
+          errorMsg = err.response.data.message;
+        } else if (err.response.data?.errors?.current_password) {
+          errorMsg = "Le mot de passe actuel est incorrect";
+          setErrors({
+            currentPassword: "Le mot de passe actuel est incorrect",
+          });
+        } else if (err.response.data?.errors?.new_password) {
+          errorMsg = err.response.data.errors.new_password[0];
+        } else {
+          errorMsg = "Le mot de passe actuel est incorrect";
+          setErrors({
+            currentPassword: "Le mot de passe actuel est incorrect",
+          });
+        }
+      } else if (err.response?.status === 401) {
+        errorMsg = "Session expirée. Veuillez vous reconnecter.";
+      } else if (err.response?.status >= 500) {
+        errorMsg = "Erreur serveur. Veuillez réessayer plus tard.";
       }
+
+      // Show professional error alert
+      setErrorMessage(errorMsg);
+      setShowErrorAlert(true);
+
+      // Also show toast for consistency
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -418,6 +483,9 @@ const ChangePasswordModal = ({ show, onHide }) => {
     });
     setErrors({});
     setLoading(false);
+    setShowSuccessAlert(false);
+    setShowErrorAlert(false);
+    setErrorMessage("");
     onHide();
   };
 
@@ -436,6 +504,72 @@ const ChangePasswordModal = ({ show, onHide }) => {
         </Modal.Title>
       </Modal.Header>
       <Modal.Body className="password-modal-body">
+        {/* Error Alert */}
+        {showErrorAlert && (
+          <Alert
+            variant="danger"
+            className="mb-4"
+            dismissible
+            onClose={() => {
+              setShowErrorAlert(false);
+              setErrorMessage("");
+            }}
+            style={{
+              border: "1px solid #f5c6cb",
+              borderRadius: "8px",
+              backgroundColor: "#f8d7da",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+            }}
+          >
+            <div className="d-flex align-items-start">
+              <FaExclamationTriangle
+                className="me-2 mt-1"
+                size={18}
+                style={{ color: "#721c24", flexShrink: 0 }}
+              />
+              <div>
+                <Alert.Heading className="h6 mb-1" style={{ color: "#721c24" }}>
+                  Erreur de changement de mot de passe
+                </Alert.Heading>
+                <p className="mb-0" style={{ color: "#721c24" }}>
+                  {errorMessage}
+                </p>
+              </div>
+            </div>
+          </Alert>
+        )}
+
+        {/* Success Alert */}
+        {showSuccessAlert && (
+          <Alert
+            variant="success"
+            className="mb-4 text-center"
+            style={{
+              border: "1px solid #d4edda",
+              borderRadius: "8px",
+              backgroundColor: "#f8f9fa",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+            }}
+          >
+            <div className="d-flex align-items-center justify-content-center">
+              <FaCheckCircle
+                className="me-2"
+                size={20}
+                style={{ color: "#28a745" }}
+              />
+              <div>
+                <Alert.Heading className="h6 mb-1" style={{ color: "#155724" }}>
+                  Mot de passe modifié avec succès !
+                </Alert.Heading>
+                <p className="mb-0 small" style={{ color: "#6c757d" }}>
+                  Votre mot de passe a été mis à jour en toute sécurité. Cette
+                  fenêtre se fermera automatiquement.
+                </p>
+              </div>
+            </div>
+          </Alert>
+        )}
+
         <Form onSubmit={handleSubmit}>
           <div className="password-field-group">
             <Form.Group className="mb-3">
@@ -453,11 +587,13 @@ const ChangePasswordModal = ({ show, onHide }) => {
                   isInvalid={!!errors.currentPassword}
                   placeholder="Entrez votre mot de passe actuel"
                   className="password-input"
+                  disabled={showSuccessAlert}
                 />
                 <Button
                   variant="outline-secondary"
                   onClick={() => togglePasswordVisibility("current")}
                   className="password-toggle-btn"
+                  disabled={showSuccessAlert}
                 >
                   {showPasswords.current ? <FaEyeSlash /> : <FaEye />}
                 </Button>
@@ -482,11 +618,13 @@ const ChangePasswordModal = ({ show, onHide }) => {
                   isInvalid={!!errors.newPassword}
                   placeholder="Entrez votre nouveau mot de passe"
                   className="password-input"
+                  disabled={showSuccessAlert}
                 />
                 <Button
                   variant="outline-secondary"
                   onClick={() => togglePasswordVisibility("new")}
                   className="password-toggle-btn"
+                  disabled={showSuccessAlert}
                 >
                   {showPasswords.new ? <FaEyeSlash /> : <FaEye />}
                 </Button>
@@ -495,8 +633,7 @@ const ChangePasswordModal = ({ show, onHide }) => {
                 {errors.newPassword}
               </Form.Control.Feedback>
               <Form.Text className="text-muted password-requirements">
-                Le mot de passe doit contenir au moins 8 caractères, une
-                majuscule, une minuscule et un chiffre
+                Le mot de passe doit contenir au moins 8 caractères.
               </Form.Text>
             </Form.Group>
 
@@ -515,11 +652,13 @@ const ChangePasswordModal = ({ show, onHide }) => {
                   isInvalid={!!errors.confirmPassword}
                   placeholder="Confirmez votre nouveau mot de passe"
                   className="password-input"
+                  disabled={showSuccessAlert}
                 />
                 <Button
                   variant="outline-secondary"
                   onClick={() => togglePasswordVisibility("confirm")}
                   className="password-toggle-btn"
+                  disabled={showSuccessAlert}
                 >
                   {showPasswords.confirm ? <FaEyeSlash /> : <FaEye />}
                 </Button>
@@ -535,28 +674,30 @@ const ChangePasswordModal = ({ show, onHide }) => {
         <Button
           variant="outline-secondary"
           onClick={handleClose}
-          disabled={loading}
+          disabled={loading && !showSuccessAlert}
         >
-          Annuler
+          {showSuccessAlert ? "Fermer" : "Annuler"}
         </Button>
-        <Button
-          variant="primary"
-          onClick={handleSubmit}
-          disabled={loading}
-          className="change-password-btn"
-        >
-          {loading ? (
-            <>
-              <Spinner animation="border" size="sm" className="me-2" />
-              Modification...
-            </>
-          ) : (
-            <>
-              <FaKey className="btn-icon" />
-              Modifier le mot de passe
-            </>
-          )}
-        </Button>
+        {!showSuccessAlert && (
+          <Button
+            variant="primary"
+            onClick={handleSubmit}
+            disabled={loading}
+            className="change-password-btn"
+          >
+            {loading ? (
+              <>
+                <Spinner animation="border" size="sm" className="me-2" />
+                Modification...
+              </>
+            ) : (
+              <>
+                <FaKey className="btn-icon" />
+                Modifier le mot de passe
+              </>
+            )}
+          </Button>
+        )}
       </Modal.Footer>
     </Modal>
   );
@@ -846,7 +987,6 @@ const ClientInterface = () => {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [clientName, setClientName] = useState("");
   const [clientData, setClientData] = useState(null);
 
   // Filter states
@@ -943,16 +1083,12 @@ const ClientInterface = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const userData = response.data.data;
+      // API returns data under response.data.user
+      const userData = response.data.user;
       setClientData(userData);
-      setClientName(
-        `${userData.personne?.nom || ""} ${
-          userData.personne?.prenom || ""
-        }`.trim()
-      );
     } catch (err) {
       console.error("Erreur lors du chargement des données client:", err);
-      setClientName("Client");
+      setClientData(null);
     }
   }, []);
 
@@ -1039,7 +1175,6 @@ const ClientInterface = () => {
     return (
       <>
         <ClientNavbar
-          clientName={clientName}
           clientData={clientData}
           onLogout={handleLogout}
           onViewProfile={handleViewProfile}
@@ -1064,7 +1199,6 @@ const ClientInterface = () => {
   return (
     <>
       <ClientNavbar
-        clientName={clientName}
         clientData={clientData}
         onLogout={handleLogout}
         onViewProfile={handleViewProfile}
@@ -1365,4 +1499,3 @@ const ClientInterface = () => {
 };
 
 export default ClientInterface;
- 
