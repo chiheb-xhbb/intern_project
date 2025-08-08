@@ -42,6 +42,13 @@ import {
   FaSearch,
   FaChevronUp,
   FaChevronDown,
+  FaUserCircle,
+  FaKey,
+  FaEnvelope,
+  FaPhone,
+  FaIdCard,
+  FaMapMarkerAlt,
+  FaEyeSlash,
 } from "react-icons/fa";
 import axios from "../api/axios";
 import { toast } from "react-toastify";
@@ -103,7 +110,13 @@ const parseDate = (dateString) => {
 };
 
 // Client Navbar Component
-const ClientNavbar = ({ clientName, onLogout }) => (
+const ClientNavbar = ({
+  clientName,
+  clientData,
+  onLogout,
+  onViewProfile,
+  onChangePassword,
+}) => (
   <Navbar className="client-navbar" expand="lg">
     <Container fluid>
       <Navbar.Brand className="navbar-brand-custom">
@@ -126,8 +139,20 @@ const ClientNavbar = ({ clientName, onLogout }) => (
             align="end"
             className="user-dropdown"
           >
+            <NavDropdown.Item onClick={onViewProfile} className="profile-item">
+              <FaUserCircle className="dropdown-item-icon" />
+              Voir le profil
+            </NavDropdown.Item>
+            <NavDropdown.Item
+              onClick={onChangePassword}
+              className="password-item"
+            >
+              <FaKey className="dropdown-item-icon" />
+              Changer le mot de passe
+            </NavDropdown.Item>
+            <NavDropdown.Divider />
             <NavDropdown.Item onClick={onLogout} className="logout-item">
-              <FaSignOutAlt className="logout-icon" />
+              <FaSignOutAlt className="dropdown-item-icon" />
               Déconnexion
             </NavDropdown.Item>
           </NavDropdown>
@@ -136,6 +161,406 @@ const ClientNavbar = ({ clientName, onLogout }) => (
     </Container>
   </Navbar>
 );
+
+// Profile Modal Component
+const ProfileModal = ({ show, onHide, clientData, loading }) => (
+  <Modal
+    show={show}
+    onHide={onHide}
+    centered
+    size="lg"
+    className="profile-modal"
+  >
+    <Modal.Header closeButton className="profile-modal-header">
+      <Modal.Title className="profile-modal-title">
+        <FaUserCircle className="modal-title-icon" />
+        Mon Profil
+      </Modal.Title>
+    </Modal.Header>
+    <Modal.Body className="profile-modal-body">
+      {loading ? (
+        <div className="loading-container-small">
+          <Spinner animation="border" variant="primary" size="sm" />
+          <span className="loading-text-small">
+            Chargement des informations...
+          </span>
+        </div>
+      ) : (
+        <Row className="profile-content g-4">
+          <Col md={6}>
+            <div className="profile-field">
+              <label className="profile-label">
+                <FaUser className="profile-icon" />
+                Nom complet
+              </label>
+              <div className="profile-value">
+                {clientData?.personne?.nom && clientData?.personne?.prenom
+                  ? `${clientData.personne.prenom} ${clientData.personne.nom}`
+                  : "Non renseigné"}
+              </div>
+            </div>
+          </Col>
+          <Col md={6}>
+            <div className="profile-field">
+              <label className="profile-label">
+                <FaEnvelope className="profile-icon" />
+                Email
+              </label>
+              <div className="profile-value">
+                {clientData?.email || "Non renseigné"}
+              </div>
+            </div>
+          </Col>
+          <Col md={6}>
+            <div className="profile-field">
+              <label className="profile-label">
+                <FaPhone className="profile-icon" />
+                Téléphone
+              </label>
+              <div className="profile-value">
+                {clientData?.personne?.telephone || "Non renseigné"}
+              </div>
+            </div>
+          </Col>
+          <Col md={6}>
+            <div className="profile-field">
+              <label className="profile-label">
+                <FaIdCard className="profile-icon" />
+                CIN
+              </label>
+              <div className="profile-value">
+                {clientData?.personne?.cin || "Non renseigné"}
+              </div>
+            </div>
+          </Col>
+          <Col md={6}>
+            <div className="profile-field">
+              <label className="profile-label">
+                <FaCalendarAlt className="profile-icon" />
+                Date de naissance
+              </label>
+              <div className="profile-value">
+                {clientData?.personne?.date_naissance
+                  ? formatDate(clientData.personne.date_naissance)
+                  : "Non renseigné"}
+              </div>
+            </div>
+          </Col>
+          <Col md={6}>
+            <div className="profile-field">
+              <label className="profile-label">
+                <FaUser className="profile-icon" />
+                Sexe
+              </label>
+              <div className="profile-value">
+                {clientData?.personne?.sexe
+                  ? clientData.personne.sexe === "M"
+                    ? "Masculin"
+                    : "Féminin"
+                  : "Non renseigné"}
+              </div>
+            </div>
+          </Col>
+          <Col xs={12}>
+            <div className="profile-field">
+              <label className="profile-label">
+                <FaMapMarkerAlt className="profile-icon" />
+                Adresse
+              </label>
+              <div className="profile-value">
+                {clientData?.personne?.adresse || "Non renseigné"}
+              </div>
+            </div>
+          </Col>
+          <Col xs={12}>
+            <div className="profile-field">
+              <label className="profile-label">
+                <FaCalendarAlt className="profile-icon" />
+                Date de création du compte
+              </label>
+              <div className="profile-value">
+                {clientData?.created_at
+                  ? formatDate(clientData.created_at)
+                  : "Non disponible"}
+              </div>
+            </div>
+          </Col>
+        </Row>
+      )}
+    </Modal.Body>
+    <Modal.Footer className="profile-modal-footer">
+      <Button
+        variant="outline-primary"
+        onClick={onHide}
+        className="close-modal-btn"
+      >
+        Fermer
+      </Button>
+    </Modal.Footer>
+  </Modal>
+);
+
+// Change Password Modal Component
+const ChangePasswordModal = ({ show, onHide }) => {
+  const [passwords, setPasswords] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false,
+  });
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  const handlePasswordChange = (field, value) => {
+    setPasswords((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+    // Clear errors when user starts typing
+    if (errors[field]) {
+      setErrors((prev) => ({
+        ...prev,
+        [field]: "",
+      }));
+    }
+  };
+
+  const togglePasswordVisibility = (field) => {
+    setShowPasswords((prev) => ({
+      ...prev,
+      [field]: !prev[field],
+    }));
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!passwords.currentPassword) {
+      newErrors.currentPassword = "Le mot de passe actuel est requis";
+    }
+
+    if (!passwords.newPassword) {
+      newErrors.newPassword = "Le nouveau mot de passe est requis";
+    } else if (passwords.newPassword.length < 8) {
+      newErrors.newPassword =
+        "Le mot de passe doit contenir au moins 8 caractères";
+    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(passwords.newPassword)) {
+      newErrors.newPassword =
+        "Le mot de passe doit contenir au moins une majuscule, une minuscule et un chiffre";
+    }
+
+    if (!passwords.confirmPassword) {
+      newErrors.confirmPassword = "La confirmation du mot de passe est requise";
+    } else if (passwords.newPassword !== passwords.confirmPassword) {
+      newErrors.confirmPassword = "Les mots de passe ne correspondent pas";
+    }
+
+    if (passwords.currentPassword === passwords.newPassword) {
+      newErrors.newPassword =
+        "Le nouveau mot de passe doit être différent de l'ancien";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validateForm()) return;
+
+    setLoading(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        "/change-password",
+        {
+          current_password: passwords.currentPassword,
+          new_password: passwords.newPassword,
+          new_password_confirmation: passwords.confirmPassword,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      toast.success("Mot de passe modifié avec succès");
+      handleClose();
+    } catch (err) {
+      console.error("Erreur lors du changement de mot de passe:", err);
+      if (err.response?.status === 400) {
+        setErrors({ currentPassword: "Le mot de passe actuel est incorrect" });
+      } else if (err.response?.data?.message) {
+        toast.error(err.response.data.message);
+      } else {
+        toast.error("Erreur lors du changement de mot de passe");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClose = () => {
+    setPasswords({
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    });
+    setShowPasswords({
+      current: false,
+      new: false,
+      confirm: false,
+    });
+    setErrors({});
+    setLoading(false);
+    onHide();
+  };
+
+  return (
+    <Modal
+      show={show}
+      onHide={handleClose}
+      centered
+      size="md"
+      className="password-modal"
+    >
+      <Modal.Header closeButton className="password-modal-header">
+        <Modal.Title className="password-modal-title">
+          <FaKey className="modal-title-icon" />
+          Changer le mot de passe
+        </Modal.Title>
+      </Modal.Header>
+      <Modal.Body className="password-modal-body">
+        <Form onSubmit={handleSubmit}>
+          <div className="password-field-group">
+            <Form.Group className="mb-3">
+              <Form.Label className="password-label">
+                <FaLock className="password-icon" />
+                Mot de passe actuel
+              </Form.Label>
+              <InputGroup>
+                <Form.Control
+                  type={showPasswords.current ? "text" : "password"}
+                  value={passwords.currentPassword}
+                  onChange={(e) =>
+                    handlePasswordChange("currentPassword", e.target.value)
+                  }
+                  isInvalid={!!errors.currentPassword}
+                  placeholder="Entrez votre mot de passe actuel"
+                  className="password-input"
+                />
+                <Button
+                  variant="outline-secondary"
+                  onClick={() => togglePasswordVisibility("current")}
+                  className="password-toggle-btn"
+                >
+                  {showPasswords.current ? <FaEyeSlash /> : <FaEye />}
+                </Button>
+              </InputGroup>
+              <Form.Control.Feedback type="invalid">
+                {errors.currentPassword}
+              </Form.Control.Feedback>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label className="password-label">
+                <FaKey className="password-icon" />
+                Nouveau mot de passe
+              </Form.Label>
+              <InputGroup>
+                <Form.Control
+                  type={showPasswords.new ? "text" : "password"}
+                  value={passwords.newPassword}
+                  onChange={(e) =>
+                    handlePasswordChange("newPassword", e.target.value)
+                  }
+                  isInvalid={!!errors.newPassword}
+                  placeholder="Entrez votre nouveau mot de passe"
+                  className="password-input"
+                />
+                <Button
+                  variant="outline-secondary"
+                  onClick={() => togglePasswordVisibility("new")}
+                  className="password-toggle-btn"
+                >
+                  {showPasswords.new ? <FaEyeSlash /> : <FaEye />}
+                </Button>
+              </InputGroup>
+              <Form.Control.Feedback type="invalid">
+                {errors.newPassword}
+              </Form.Control.Feedback>
+              <Form.Text className="text-muted password-requirements">
+                Le mot de passe doit contenir au moins 8 caractères, une
+                majuscule, une minuscule et un chiffre
+              </Form.Text>
+            </Form.Group>
+
+            <Form.Group className="mb-4">
+              <Form.Label className="password-label">
+                <FaKey className="password-icon" />
+                Confirmer le nouveau mot de passe
+              </Form.Label>
+              <InputGroup>
+                <Form.Control
+                  type={showPasswords.confirm ? "text" : "password"}
+                  value={passwords.confirmPassword}
+                  onChange={(e) =>
+                    handlePasswordChange("confirmPassword", e.target.value)
+                  }
+                  isInvalid={!!errors.confirmPassword}
+                  placeholder="Confirmez votre nouveau mot de passe"
+                  className="password-input"
+                />
+                <Button
+                  variant="outline-secondary"
+                  onClick={() => togglePasswordVisibility("confirm")}
+                  className="password-toggle-btn"
+                >
+                  {showPasswords.confirm ? <FaEyeSlash /> : <FaEye />}
+                </Button>
+              </InputGroup>
+              <Form.Control.Feedback type="invalid">
+                {errors.confirmPassword}
+              </Form.Control.Feedback>
+            </Form.Group>
+          </div>
+        </Form>
+      </Modal.Body>
+      <Modal.Footer className="password-modal-footer">
+        <Button
+          variant="outline-secondary"
+          onClick={handleClose}
+          disabled={loading}
+        >
+          Annuler
+        </Button>
+        <Button
+          variant="primary"
+          onClick={handleSubmit}
+          disabled={loading}
+          className="change-password-btn"
+        >
+          {loading ? (
+            <>
+              <Spinner animation="border" size="sm" className="me-2" />
+              Modification...
+            </>
+          ) : (
+            <>
+              <FaKey className="btn-icon" />
+              Modifier le mot de passe
+            </>
+          )}
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  );
+};
 
 // Filters Component
 const FiltersSection = ({
@@ -422,6 +847,7 @@ const ClientInterface = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [clientName, setClientName] = useState("");
+  const [clientData, setClientData] = useState(null);
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -438,6 +864,9 @@ const ClientInterface = () => {
   // Modal states
   const [selectedReclamation, setSelectedReclamation] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
 
   const navigate = useNavigate();
 
@@ -515,6 +944,7 @@ const ClientInterface = () => {
       });
 
       const userData = response.data.data;
+      setClientData(userData);
       setClientName(
         `${userData.personne?.nom || ""} ${
           userData.personne?.prenom || ""
@@ -582,6 +1012,14 @@ const ClientInterface = () => {
     navigate("/login");
   };
 
+  const handleViewProfile = () => {
+    setShowProfile(true);
+  };
+
+  const handleChangePassword = () => {
+    setShowChangePassword(true);
+  };
+
   const handleFiltersChange = (newFilters) => {
     setFilters(newFilters);
   };
@@ -600,7 +1038,13 @@ const ClientInterface = () => {
   if (loading) {
     return (
       <>
-        <ClientNavbar clientName={clientName} onLogout={handleLogout} />
+        <ClientNavbar
+          clientName={clientName}
+          clientData={clientData}
+          onLogout={handleLogout}
+          onViewProfile={handleViewProfile}
+          onChangePassword={handleChangePassword}
+        />
         <div className="client-interface">
           <Container className="py-4">
             <div className="loading-container">
@@ -619,7 +1063,13 @@ const ClientInterface = () => {
 
   return (
     <>
-      <ClientNavbar clientName={clientName} onLogout={handleLogout} />
+      <ClientNavbar
+        clientName={clientName}
+        clientData={clientData}
+        onLogout={handleLogout}
+        onViewProfile={handleViewProfile}
+        onChangePassword={handleChangePassword}
+      />
 
       <div className="client-interface">
         <Container className="py-4">
@@ -774,6 +1224,20 @@ const ClientInterface = () => {
         </Container>
       </div>
 
+      {/* Profile Modal */}
+      <ProfileModal
+        show={showProfile}
+        onHide={() => setShowProfile(false)}
+        clientData={clientData}
+        loading={profileLoading}
+      />
+
+      {/* Change Password Modal */}
+      <ChangePasswordModal
+        show={showChangePassword}
+        onHide={() => setShowChangePassword(false)}
+      />
+
       {/* Details Modal */}
       <Modal
         show={showDetails}
@@ -901,3 +1365,4 @@ const ClientInterface = () => {
 };
 
 export default ClientInterface;
+ 
