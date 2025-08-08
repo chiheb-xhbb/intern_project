@@ -1,25 +1,56 @@
 import React, { useState, useRef } from "react";
-import { Modal, Button, Form, Row, Col, InputGroup, Spinner } from "react-bootstrap";
+import {
+  Modal,
+  Button,
+  Form,
+  Row,
+  Col,
+  InputGroup,
+  Spinner,
+  Card,
+  Badge,
+  OverlayTrigger,
+  Tooltip,
+  Alert,
+} from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import {
+  FaPlus,
+  FaUser,
+  FaFileAlt,
+  FaCalendarAlt,
+  FaEnvelope,
+  FaPhone,
+  FaBuilding,
+  FaGlobe,
+  FaTimes,
+  FaCloudUploadAlt,
+  FaFilePdf,
+  FaFileImage,
+  FaFileWord,
+  FaExclamationTriangle,
+  FaSave,
+  FaArrowLeft,
+} from "react-icons/fa";
 import axios from "../api/axios";
+import "./AjouterReclamation.css";
+
 const TYPE_OPTIONS = [
-  "Carte bloquée",
-  "Erreur de virement",
-  "Retard crédit",
-  "Chèque rejeté",
-  "Autre",
+  { value: "Carte bloquée", label: "Carte bloquée", icon: "🔒" },
+  { value: "Erreur de virement", label: "Erreur de virement", icon: "💸" },
+  { value: "Retard crédit", label: "Retard crédit", icon: "⏰" },
+  { value: "Chèque rejeté", label: "Chèque rejeté", icon: "❌" },
+  { value: "Autre", label: "Autre", icon: "❓" },
 ];
+
 const CANAL_OPTIONS = [
-  { value: "email", label: "Email" },
-  { value: "téléphone", label: "Téléphone" },
-  { value: "agence", label: "En personne" },
-  { value: "application_web", label: "Application web" }
+  { value: "email", label: "Email", icon: FaEnvelope },
+  { value: "téléphone", label: "Téléphone", icon: FaPhone },
+  { value: "agence", label: "En personne", icon: FaBuilding },
+  { value: "application_web", label: "Application web", icon: FaGlobe },
 ];
-const MOCK_COMPTES = [
-  { id: 1, numero: "1234567890" },
-  { id: 2, numero: "9876543210" },
-];
+
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ACCEPTED_TYPES = [
   "application/pdf",
@@ -27,6 +58,22 @@ const ACCEPTED_TYPES = [
   "image/jpeg",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
+
+// File type icon mapping
+const getFileIcon = (fileType) => {
+  if (fileType.includes("pdf")) return FaFilePdf;
+  if (fileType.includes("image")) return FaFileImage;
+  if (fileType.includes("word")) return FaFileWord;
+  return FaFileAlt;
+};
+
+// File type color mapping
+const getFileIconColor = (fileType) => {
+  if (fileType.includes("pdf")) return "#dc3545";
+  if (fileType.includes("image")) return "#28a745";
+  if (fileType.includes("word")) return "#007bff";
+  return "#6c757d";
+};
 
 const AjouterReclamation = ({ show, onHide }) => {
   const [form, setForm] = useState({
@@ -50,12 +97,17 @@ const AjouterReclamation = ({ show, onHide }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((f) => ({ ...f, [name]: value }));
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
   };
 
   const handleFileChange = (e) => {
     const newFiles = Array.from(e.target.files);
     let valid = true;
     let errorMsg = "";
+
     newFiles.forEach((file) => {
       if (!ACCEPTED_TYPES.includes(file.type)) {
         valid = false;
@@ -65,10 +117,12 @@ const AjouterReclamation = ({ show, onHide }) => {
         errorMsg = `Fichier trop volumineux (>5MB): ${file.name}`;
       }
     });
+
     if (!valid) {
       toast.error(errorMsg);
       return;
     }
+
     setFiles((prev) => [...prev, ...newFiles]);
     fileInputRef.current.value = "";
   };
@@ -82,24 +136,37 @@ const AjouterReclamation = ({ show, onHide }) => {
     setClientId(value);
     setForm((f) => ({ ...f, compte: "" }));
     setComptes([]);
+
+    // Clear client ID error
+    if (errors.clientId) {
+      setErrors((prev) => ({ ...prev, clientId: "" }));
+    }
+
     if (!value) return;
+
     setLoadingComptes(true);
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get(`/clients/${value}/comptes`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       let comptesArray = [];
       if (Array.isArray(res.data.data)) {
         comptesArray = res.data.data;
       } else if (res.data.data && Array.isArray(res.data.data.data)) {
         comptesArray = res.data.data.data;
       }
+
       setComptes(comptesArray);
-      if (comptesArray.length === 0) toast.warn("Aucun compte trouvé pour ce client.");
+      if (comptesArray.length === 0) {
+        toast.warn("Aucun compte trouvé pour ce client.");
+      }
     } catch (err) {
       setComptes([]);
-      toast.error("Client introuvable ou erreur lors du chargement des comptes.");
+      toast.error(
+        "Client introuvable ou erreur lors du chargement des comptes."
+      );
     } finally {
       setLoadingComptes(false);
     }
@@ -111,7 +178,7 @@ const AjouterReclamation = ({ show, onHide }) => {
     if (!form.compte) errs.compte = "Compte bancaire requis";
     if (!form.type) errs.type = "Type requis";
     if (!form.canal) errs.canal = "Canal requis";
-    if (!form.description) errs.description = "Description requise";
+    if (!form.description?.trim()) errs.description = "Description requise";
     if (!form.date) errs.date = "Date requise";
     return errs;
   };
@@ -119,9 +186,14 @@ const AjouterReclamation = ({ show, onHide }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setBackendError("");
+
     const errs = validate();
     setErrors(errs);
-    if (Object.keys(errs).length > 0) return;
+
+    if (Object.keys(errs).length > 0) {
+      toast.error("Veuillez corriger les erreurs dans le formulaire");
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -136,7 +208,6 @@ const AjouterReclamation = ({ show, onHide }) => {
       formData.append("date_reception", form.date);
       formData.append("statut", form.statut);
 
-      // Ajouter les fichiers
       files.forEach((file) => {
         formData.append("pieces_jointes[]", file);
       });
@@ -165,211 +236,374 @@ const AjouterReclamation = ({ show, onHide }) => {
     }
   };
 
+  const handleClose = () => {
+    if (onHide) onHide();
+    else navigate("/admin/reclamations");
+  };
 
   return (
     <Modal
       show={show !== false}
-      onHide={() => navigate("/admin/reclamations")}
+      onHide={handleClose}
       centered
-      size="lg"
+      size="xl"
       backdrop="static"
+      className="ajouter-reclamation-modal"
     >
-      <Modal.Header closeButton>
-        <Modal.Title>Ajouter une réclamation</Modal.Title>
-      </Modal.Header>
-      <Form onSubmit={handleSubmit} autoComplete="off">
-        <Modal.Body>
-          <Row className="g-3">
-            <Col md={6}>
-              <Form.Group className="mb-2">
-                <Form.Label>ID du client *</Form.Label>
-                <Form.Control
-                  type="number"
-                  value={clientId}
-                  onChange={handleClientIdChange}
-                  placeholder="Entrer l'ID du client"
-                  required
-                  isInvalid={!!errors.clientId}
-                />
-                <Form.Control.Feedback type="invalid">
-                  {errors.clientId}
-                </Form.Control.Feedback>
-              </Form.Group>
-            </Col>
-            <Col md={6}>
-              <Form.Group className="mb-2">
-                <Form.Label>Type de réclamation *</Form.Label>
-                <Form.Select
-                  name="type"
-                  value={form.type}
-                  onChange={handleChange}
-                  isInvalid={!!errors.type}
-                >
-                  <option value="">Sélectionner...</option>
-                  {TYPE_OPTIONS.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                </Form.Select>
-                <Form.Control.Feedback type="invalid">
-                  {errors.type}
-                </Form.Control.Feedback>
-              </Form.Group>
-            </Col>
-            <Col md={6}>
-              <Form.Group className="mb-2">
-                <Form.Label>Canal de réception *</Form.Label>
-                <Form.Select
-                  name="canal"
-                  value={form.canal}
-                  onChange={handleChange}
-                  isInvalid={!!errors.canal}
-                >
-                  <option value="">Sélectionner...</option>
-                  {CANAL_OPTIONS.map((c) => (
-                    <option key={c.value} value={c.value}>
-                      {c.label}
-                    </option>
-                  ))}
-                </Form.Select>
-                <Form.Control.Feedback type="invalid">
-                  {errors.canal}
-                </Form.Control.Feedback>
-              </Form.Group>
-            </Col>
-            <Col md={6}>
-              <Form.Group className="mb-2">
-                <Form.Label>Compte bancaire concerné</Form.Label>
-                <Form.Select
-                  name="compte"
-                  value={form.compte}
-                  onChange={handleChange}
-                  disabled={!clientId || loadingComptes || comptes.length === 0}
-                  isInvalid={!!errors.compte}
-                >
-                  <option value="">Aucun</option>
-                  {Array.isArray(comptes) &&
-                    comptes.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.numero_compte}
-                      </option>
-                    ))}
-                </Form.Select>
-                <Form.Control.Feedback type="invalid">
-                  {errors.compte}
-                </Form.Control.Feedback>
-                {loadingComptes && (
-                  <div className="small text-muted">Chargement...</div>
-                )}
-              </Form.Group>
-            </Col>
-            <Col md={6}>
-              <Form.Group className="mb-2">
-                <Form.Label>Date de réception *</Form.Label>
-                <Form.Control
-                  type="date"
-                  name="date"
-                  value={form.date}
-                  onChange={handleChange}
-                  isInvalid={!!errors.date}
-                />
-                <Form.Control.Feedback type="invalid">
-                  {errors.date}
-                </Form.Control.Feedback>
-              </Form.Group>
-            </Col>
-            <Col md={12}>
-              <Form.Group className="mb-2">
-                <Form.Label>Description *</Form.Label>
-                <Form.Control
-                  as="textarea"
-                  name="description"
-                  value={form.description}
-                  onChange={handleChange}
-                  rows={3}
-                  isInvalid={!!errors.description}
-                />
-                <Form.Control.Feedback type="invalid">
-                  {errors.description}
-                </Form.Control.Feedback>
-              </Form.Group>
-            </Col>
-            <Col md={12}>
-              <Form.Group className="mb-2">
-                <Form.Label>
-                  Pièces jointes (PDF, PNG, JPEG, DOCX, max 5MB/fichier)
-                </Form.Label>
-                <Form.Control
-                  type="file"
-                  multiple
-                  accept=".pdf,.png,.jpeg,.jpg,.docx,application/pdf,image/png,image/jpeg,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                  onChange={handleFileChange}
-                  ref={fileInputRef}
-                />
-                <div className="mt-2">
-                  {files.map((file, idx) => (
-                    <div
-                      key={idx}
-                      className="d-flex align-items-center mb-1 bg-light rounded px-2 py-1"
-                    >
-                      <span className="me-2">
-                        {file.type.includes("pdf") && (
-                          <i className="bi bi-file-earmark-pdf"></i>
-                        )}
-                        {file.type.includes("image") && (
-                          <i className="bi bi-file-earmark-image"></i>
-                        )}
-                        {file.type.includes("word") && (
-                          <i className="bi bi-file-earmark-word"></i>
-                        )}
-                      </span>
-                      <span className="flex-grow-1 small">
-                        {file.name} ({(file.size / 1024).toFixed(1)} KB)
-                      </span>
-                      <Button
-                        variant="outline-danger"
-                        size="sm"
-                        className="ms-2"
-                        onClick={() => handleRemoveFile(idx)}
-                        tabIndex={-1}
-                      >
-                        &times;
-                      </Button>
-                    </div>
-                  ))}
+      <div className="modal-overlay">
+        <Modal.Header className="modal-header-custom">
+          <Modal.Title className="modal-title-custom">
+            <div className="title-icon-wrapper">
+              <FaPlus />
+            </div>
+            <div>
+              <h4 className="mb-0">Nouvelle Réclamation</h4>
+            </div>
+          </Modal.Title>
+        </Modal.Header>
+
+        <Form onSubmit={handleSubmit} autoComplete="off" className="h-100">
+          <Modal.Body className="modal-body-custom">
+            {/* Backend Error Alert */}
+            {backendError && (
+              <Alert
+                variant="danger"
+                className="custom-alert mb-4"
+                dismissible
+                onClose={() => setBackendError("")}
+              >
+                <div className="d-flex align-items-center">
+                  <FaExclamationTriangle className="me-2" />
+                  {backendError}
                 </div>
-              </Form.Group>
-            </Col>
-          </Row>
-        </Modal.Body>
-        {backendError && (
-          <div className="alert alert-danger mb-3">{backendError}</div>
-        )}
-        <Modal.Footer>
-          <Button
-            variant="secondary"
-            onClick={onHide || (() => navigate("/admin/reclamations"))}
-            disabled={submitting}
-          >
-            Annuler
-          </Button>
-          <Button
-            type="submit"
-            variant="primary"
-            style={{ background: "#115e8bff", border: "none" }}
-            disabled={submitting}
-          >
-            {submitting ? (
-              <Spinner size="sm" animation="border" />
-            ) : (
-              "Soumettre"
+              </Alert>
             )}
-          </Button>
-        </Modal.Footer>
-      </Form>
+
+            <div className="form-sections">
+              {/* Section 1: Informations Client */}
+              <Card className="form-section-card">
+                <Card.Header className="form-section-header">
+                  <FaUser className="me-2" />
+                  Informations Client
+                </Card.Header>
+                <Card.Body>
+                  <Row className="g-4">
+                    <Col md={6}>
+                      <Form.Group className="form-group-custom">
+                        <Form.Label className="form-label-custom">
+                          <FaUser className="me-2" />
+                          ID du client *
+                        </Form.Label>
+                        <Form.Control
+                          type="number"
+                          value={clientId}
+                          onChange={handleClientIdChange}
+                          placeholder="Entrer l'ID du client"
+                          className={`form-control-custom ${
+                            errors.clientId ? "is-invalid" : ""
+                          }`}
+                          disabled={submitting}
+                        />
+                        {errors.clientId && (
+                          <div className="invalid-feedback-custom">
+                            {errors.clientId}
+                          </div>
+                        )}
+                      </Form.Group>
+                    </Col>
+                    <Col md={6}>
+                      <Form.Group className="form-group-custom">
+                        <Form.Label className="form-label-custom">
+                          Compte bancaire concerné *
+                        </Form.Label>
+                        <Form.Select
+                          name="compte"
+                          value={form.compte}
+                          onChange={handleChange}
+                          disabled={
+                            !clientId ||
+                            loadingComptes ||
+                            comptes.length === 0 ||
+                            submitting
+                          }
+                          className={`form-control-custom ${
+                            errors.compte ? "is-invalid" : ""
+                          }`}
+                        >
+                          <option value="">Sélectionner un compte</option>
+                          {Array.isArray(comptes) &&
+                            comptes.map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {c.numero_compte}
+                              </option>
+                            ))}
+                        </Form.Select>
+                        {errors.compte && (
+                          <div className="invalid-feedback-custom">
+                            {errors.compte}
+                          </div>
+                        )}
+                        {loadingComptes && (
+                          <div className="loading-indicator">
+                            <Spinner
+                              size="sm"
+                              animation="border"
+                              className="me-2"
+                            />
+                            Chargement des comptes...
+                          </div>
+                        )}
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                </Card.Body>
+              </Card>
+
+              {/* Section 2: Détails de la Réclamation */}
+              <Card className="form-section-card">
+                <Card.Header className="form-section-header">
+                  <FaFileAlt className="me-2" />
+                  Détails de la Réclamation
+                </Card.Header>
+                <Card.Body>
+                  <Row className="g-4">
+                    <Col md={6}>
+                      <Form.Group className="form-group-custom">
+                        <Form.Label className="form-label-custom">
+                          Type de réclamation *
+                        </Form.Label>
+                        <Form.Select
+                          name="type"
+                          value={form.type}
+                          onChange={handleChange}
+                          className={`form-control-custom ${
+                            errors.type ? "is-invalid" : ""
+                          }`}
+                          disabled={submitting}
+                        >
+                          <option value="">Sélectionner un type</option>
+                          {TYPE_OPTIONS.map((type) => (
+                            <option key={type.value} value={type.value}>
+                              {type.icon} {type.label}
+                            </option>
+                          ))}
+                        </Form.Select>
+                        {errors.type && (
+                          <div className="invalid-feedback-custom">
+                            {errors.type}
+                          </div>
+                        )}
+                      </Form.Group>
+                    </Col>
+                    <Col md={6}>
+                      <Form.Group className="form-group-custom">
+                        <Form.Label className="form-label-custom">
+                          Canal de réception *
+                        </Form.Label>
+                        <Form.Select
+                          name="canal"
+                          value={form.canal}
+                          onChange={handleChange}
+                          className={`form-control-custom ${
+                            errors.canal ? "is-invalid" : ""
+                          }`}
+                          disabled={submitting}
+                        >
+                          <option value="">Sélectionner un canal</option>
+                          {CANAL_OPTIONS.map((canal) => {
+                            const IconComponent = canal.icon;
+                            return (
+                              <option key={canal.value} value={canal.value}>
+                                {canal.label}
+                              </option>
+                            );
+                          })}
+                        </Form.Select>
+                        {errors.canal && (
+                          <div className="invalid-feedback-custom">
+                            {errors.canal}
+                          </div>
+                        )}
+                      </Form.Group>
+                    </Col>
+                    <Col md={6}>
+                      <Form.Group className="form-group-custom">
+                        <Form.Label className="form-label-custom">
+                          <FaCalendarAlt className="me-2" />
+                          Date de réception *
+                        </Form.Label>
+                        <Form.Control
+                          type="date"
+                          name="date"
+                          value={form.date}
+                          onChange={handleChange}
+                          className={`form-control-custom ${
+                            errors.date ? "is-invalid" : ""
+                          }`}
+                          disabled={submitting}
+                        />
+                        {errors.date && (
+                          <div className="invalid-feedback-custom">
+                            {errors.date}
+                          </div>
+                        )}
+                      </Form.Group>
+                    </Col>
+                    <Col md={12}>
+                      <Form.Group className="form-group-custom">
+                        <Form.Label className="form-label-custom">
+                          Description *
+                        </Form.Label>
+                        <Form.Control
+                          as="textarea"
+                          name="description"
+                          value={form.description}
+                          onChange={handleChange}
+                          rows={4}
+                          placeholder="Décrivez en détail la réclamation du client..."
+                          className={`form-control-custom textarea-custom ${
+                            errors.description ? "is-invalid" : ""
+                          }`}
+                          disabled={submitting}
+                        />
+                        {errors.description && (
+                          <div className="invalid-feedback-custom">
+                            {errors.description}
+                          </div>
+                        )}
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                </Card.Body>
+              </Card>
+
+              {/* Section 3: Pièces Jointes */}
+              <Card className="form-section-card">
+                <Card.Header className="form-section-header">
+                  <FaCloudUploadAlt className="me-2" />
+                  Pièces Jointes
+                </Card.Header>
+                <Card.Body>
+                  <Form.Group className="form-group-custom">
+                    <Form.Label className="form-label-custom">
+                      Documents (PDF, PNG, JPEG, DOCX - max 5MB/fichier)
+                    </Form.Label>
+
+                    <div
+                      className="file-upload-area"
+                      onClick={() =>
+                        !submitting && fileInputRef.current?.click()
+                      }
+                    >
+                      <FaCloudUploadAlt size={32} className="upload-icon" />
+                      <h6>Cliquez pour sélectionner des fichiers</h6>
+                      <p className="text-muted mb-0">
+                        ou glissez-déposez vos documents ici
+                      </p>
+                      <Form.Control
+                        type="file"
+                        multiple
+                        accept=".pdf,.png,.jpeg,.jpg,.docx,application/pdf,image/png,image/jpeg,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                        onChange={handleFileChange}
+                        ref={fileInputRef}
+                        style={{ display: "none" }}
+                        disabled={submitting}
+                      />
+                    </div>
+
+                    {files.length > 0 && (
+                      <div className="files-preview mt-3">
+                        <h6 className="files-title mb-3">
+                          <FaFileAlt className="me-2" />
+                          Fichiers sélectionnés ({files.length})
+                        </h6>
+                        <div className="files-grid">
+                          {files.map((file, idx) => {
+                            const IconComponent = getFileIcon(file.type);
+                            const iconColor = getFileIconColor(file.type);
+
+                            return (
+                              <div key={idx} className="file-preview-card">
+                                <div
+                                  className="file-icon"
+                                  style={{ color: iconColor }}
+                                >
+                                  <IconComponent size={24} />
+                                </div>
+                                <div className="file-info">
+                                  <div className="file-name" title={file.name}>
+                                    {file.name.length > 20
+                                      ? file.name.substring(0, 20) + "..."
+                                      : file.name}
+                                  </div>
+                                  <div className="file-size">
+                                    {(file.size / 1024).toFixed(1)} KB
+                                  </div>
+                                </div>
+                                <OverlayTrigger
+                                  placement="top"
+                                  overlay={
+                                    <Tooltip>Supprimer le fichier</Tooltip>
+                                  }
+                                >
+                                  <Button
+                                    variant="outline-danger"
+                                    size="sm"
+                                    className="file-remove-btn"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleRemoveFile(idx);
+                                    }}
+                                    disabled={submitting}
+                                  >
+                                    <FaTimes />
+                                  </Button>
+                                </OverlayTrigger>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </Form.Group>
+                </Card.Body>
+              </Card>
+            </div>
+          </Modal.Body>
+
+          <Modal.Footer className="modal-footer-custom">
+            <Button
+              variant="outline-secondary"
+              onClick={handleClose}
+              disabled={submitting}
+              className="btn-cancel"
+            >
+              <FaArrowLeft className="me-2" />
+              Annuler
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={submitting}
+              className="btn-submit"
+            >
+              {submitting ? (
+                <>
+                  <Spinner size="sm" animation="border" className="me-2" />
+                  Traitement...
+                </>
+              ) : (
+                <>
+                  <FaSave className="me-2" />
+                  Créer la réclamation
+                </>
+              )}
+            </Button>
+          </Modal.Footer>
+        </Form>
+      </div>
     </Modal>
   );
 };
 
-export default AjouterReclamation; 
+export default AjouterReclamation;
