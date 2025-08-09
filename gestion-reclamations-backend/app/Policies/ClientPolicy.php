@@ -17,13 +17,10 @@ class ClientPolicy
     }
     public function view(Personne $personne, Client $client)
     {
-        // Allow if user is admin
-        if ($personne->admin()->exists()) {
-            return true;
-        }
-        // Allow if user is the owner of the client account
-        return $personne->id === $client->personne_id;
+        return $personne->admin()->exists() || $client->personne->is($personne);
     }
+
+
 
 
 }

@@ -1225,7 +1225,7 @@ const ClientInterface = () => {
               <Button
                 variant="primary"
                 className="create-btn"
-                onClick={() => navigate("/client/reclamations/nouvelle")}
+                onClick={() => navigate("/client/reclamation/creer")}
               >
                 <FaPlus className="btn-icon" />
                 Créer une réclamation
@@ -1271,14 +1271,6 @@ const ClientInterface = () => {
                   <p className="empty-state-text">
                     Vous n'avez pas encore créé de réclamation
                   </p>
-                  <Button
-                    variant="primary"
-                    className="empty-state-btn"
-                    onClick={() => navigate("/client/reclamations/nouvelle")}
-                  >
-                    <FaPlus className="btn-icon" />
-                    Créer ma première réclamation
-                  </Button>
                 </div>
               </Card.Body>
             </Card>

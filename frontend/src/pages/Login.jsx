@@ -34,15 +34,15 @@ const Login = () => {
   return (
     <section
       className="vh-100"
-      style={{ backgroundColor: "#4e4949ff" }}
+      style={{ backgroundColor: "#f8f9fa" }}
       id="login-section"
     >
       <div className="container py-5 h-100">
-        <div className="row d-flex justify-content-center align-items-center h-100">
+        <div className="row d-flex justify-content-center align-items-center h-100" >
           <div className="col-12 col-md-8 col-lg-6 col-xl-5">
             <div
               className="card shadow-2-strong"
-              style={{ borderRadius: "1rem" }}
+              style={{ borderRadius: "1rem" ,boxShadow: "0 0 10px rgba(0,0,0,0.1)"}}
             >
               <div className="card-body p-5 text-center">
                 <img
@@ -99,7 +99,6 @@ const Login = () => {
                   </button>
                   <hr className="my-4" />
                 </form>
-                
               </div>
             </div>
           </div>

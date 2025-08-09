@@ -6,6 +6,7 @@ import AdminReclamations from "./pages/AdminReclamations";
 import AjouterReclamation from "./pages/AjouterReclamation";
 import AdminClients from "./pages/AdminClients";
 import ClientInterface from "./pages/ClientInterface";
+import CreerReclamation from "./pages/CreerReclamation";
 function App() {
   return (
     <BrowserRouter>
@@ -18,6 +19,10 @@ function App() {
         <Route
           path="/admin/reclamations/ajouter"
           element={<AjouterReclamation />}
+        />
+        <Route
+          path="/client/reclamation/creer"
+          element={<CreerReclamation />}
         />
         <Route path="/admin/clients" element={<AdminClients />} />
       </Routes>
