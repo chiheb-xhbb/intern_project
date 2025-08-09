@@ -147,7 +147,7 @@ const ClientNavbar = ({
         <div className="navbar-center-title d-none d-lg-block">
           <h4 className="page-title-navbar">BH Réclamations</h4>
         </div>
-
+        {/* responsive */}
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
 
         <Navbar.Collapse id="basic-navbar-nav">
@@ -348,7 +348,7 @@ const ProfileModal = ({ show, onHide, clientData, loading }) => (
                   </Badge>
                 </div>
               </div>
-              {/* 
+              
               <div className="detail-item">
                 <label className="detail-label">
                   <FaIdCard className="me-2" />
@@ -357,7 +357,7 @@ const ProfileModal = ({ show, onHide, clientData, loading }) => (
                 <div className="detail-value">
                   {clientData?.client?.numero_client || "Non renseigné"}
                 </div>
-              </div>*/}
+              </div>
             </div>
           </div>
         </>

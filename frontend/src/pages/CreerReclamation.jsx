@@ -42,11 +42,11 @@ import "./CreerReclamation.css";
  * Options de types de réclamations disponibles
  */
 const TYPE_OPTIONS = [
-  { value: "Carte bloquée", label: "Carte bloquée", icon: "🔒" },
-  { value: "Erreur de virement", label: "Erreur de virement", icon: "💸" },
-  { value: "Retard crédit", label: "Retard crédit", icon: "⏰" },
-  { value: "Chèque rejeté", label: "Chèque rejeté", icon: "❌" },
-  { value: "Autre", label: "Autre", icon: "❓" },
+  { value: "Carte bloquée", label: "Carte bloquée"},
+  { value: "Erreur de virement", label: "Erreur de virement"},
+  { value: "Retard crédit", label: "Retard crédit"},
+  { value: "Chèque rejeté", label: "Chèque rejeté"},
+  { value: "Autre", label: "Autre"},
 ];
 
 /**
@@ -546,7 +546,7 @@ const CreerReclamation = ({ show, onHide, clientId: propClientId }) => {
                           <option value="">Sélectionner un type</option>
                           {TYPE_OPTIONS.map((type) => (
                             <option key={type.value} value={type.value}>
-                              {type.icon} {type.label}
+                               {type.label}
                             </option>
                           ))}
                         </Form.Select>
