@@ -51,6 +51,8 @@ import {
   FaEyeSlash,
   FaCheck,
   FaExclamationTriangle,
+  FaBirthdayCake,
+  FaTags,
 } from "react-icons/fa";
 import axios from "../api/axios";
 import { toast } from "react-toastify";
@@ -93,6 +95,13 @@ const getFullName = (clientData) => {
   const nom = clientData.nom || "";
   const prenom = clientData.prenom || "";
   return `${prenom} ${nom}`.trim() || "Client";
+};
+
+// Helper function to get initials (like in AdminClients)
+const getInitials = (nom, prenom) => {
+  const n = nom?.charAt(0) || "";
+  const p = prenom?.charAt(0) || "";
+  return `${n}${p}`.toUpperCase() || "?";
 };
 
 // Helper function to map API data
@@ -203,8 +212,8 @@ const ProfileModal = ({ show, onHide, clientData, loading }) => (
     className="profile-modal"
   >
     <Modal.Header closeButton className="profile-modal-header">
-      <Modal.Title className="profile-modal-title">
-        <FaUserCircle className="modal-title-icon" />
+      <Modal.Title className="profile-modal-title d-flex align-items-center">
+        <FaUser className="me-2" />
         Mon Profil
       </Modal.Title>
     </Modal.Header>
@@ -217,102 +226,139 @@ const ProfileModal = ({ show, onHide, clientData, loading }) => (
           </span>
         </div>
       ) : (
-        <Row className="profile-content g-4">
-          <Col md={6}>
-            <div className="profile-field">
-              <label className="profile-label">
-                <FaUser className="profile-icon" />
-                Nom complet
-              </label>
-              <div className="profile-value">
-                {clientData?.nom && clientData?.prenom
-                  ? `${clientData.prenom} ${clientData.nom}`
-                  : "Non renseigné"}
+        <>
+          {/* Client Header */}
+          <div className="client-header">
+            <div className="client-avatar-large">
+              {getInitials(clientData?.nom, clientData?.prenom)}
+            </div>
+            <h3 className="client-name">
+              {clientData?.nom && clientData?.prenom
+                ? `${clientData.prenom} ${clientData.nom}`
+                : "Nom non renseigné"}
+            </h3>
+            <p className="client-email text-muted">
+              {clientData?.email || "Email non renseigné"}
+            </p>
+          </div>
+
+          {/* Informations personnelles */}
+          <div className="detail-section">
+            <h5 className="detail-section-title">
+              <FaIdCard className="me-2" />
+              Informations personnelles
+            </h5>
+            <div className="info-grid">
+              <div className="detail-item">
+                <label className="detail-label">
+                  <FaUser className="me-2" />
+                  Nom
+                </label>
+                <div className="detail-value">
+                  {clientData?.nom || "Non renseigné"}
+                </div>
+              </div>
+              <div className="detail-item">
+                <label className="detail-label">
+                  <FaUser className="me-2" />
+                  Prénom
+                </label>
+                <div className="detail-value">
+                  {clientData?.prenom || "Non renseigné"}
+                </div>
+              </div>
+              <div className="detail-item">
+                <label className="detail-label">
+                  <FaBirthdayCake className="me-2" />
+                  Date de naissance
+                </label>
+                <div className="detail-value">
+                  {clientData?.client?.date_naissance
+                    ? formatDate(clientData.client.date_naissance)
+                    : "Non renseigné"}
+                </div>
+              </div>
+              <div className="detail-item">
+                <label className="detail-label">
+                  <FaMapMarkerAlt className="me-2" />
+                  Adresse
+                </label>
+                <div className="detail-value">
+                  {clientData?.client?.adresse || "Non renseigné"}
+                </div>
               </div>
             </div>
-          </Col>
-          <Col md={6}>
-            <div className="profile-field">
-              <label className="profile-label">
-                <FaEnvelope className="profile-icon" />
-                Email
-              </label>
-              <div className="profile-value">
-                {clientData?.email || "Non renseigné"}
+          </div>
+
+          {/* Informations de contact */}
+          <div className="detail-section">
+            <h5 className="detail-section-title">
+              <FaEnvelope className="me-2" />
+              Informations de contact
+            </h5>
+            <div className="info-grid">
+              <div className="detail-item">
+                <label className="detail-label">
+                  <FaEnvelope className="me-2" />
+                  Email
+                </label>
+                <div className="detail-value">
+                  {clientData?.email || "Non renseigné"}
+                </div>
+              </div>
+              <div className="detail-item">
+                <label className="detail-label">
+                  <FaPhone className="me-2" />
+                  Téléphone
+                </label>
+                <div className="detail-value">
+                  {clientData?.telephone || "Non renseigné"}
+                </div>
               </div>
             </div>
-          </Col>
-          <Col md={6}>
-            <div className="profile-field">
-              <label className="profile-label">
-                <FaPhone className="profile-icon" />
-                Téléphone
-              </label>
-              <div className="profile-value">
-                {clientData?.telephone || "Non renseigné"}
+          </div>
+
+          {/* Informations du compte */}
+          <div className="detail-section">
+            <h5 className="detail-section-title">
+              <FaCalendarAlt className="me-2" />
+              Informations du compte
+            </h5>
+            <div className="info-grid">
+              <div className="detail-item">
+                <label className="detail-label">
+                  <FaCalendarAlt className="me-2" />
+                  Date de création du compte
+                </label>
+                <div className="detail-value">
+                  {clientData?.created_at
+                    ? formatDate(clientData.created_at)
+                    : "Non disponible"}
+                </div>
+              </div>
+              <div className="detail-item">
+                <label className="detail-label">
+                  <FaTags className="me-2" />
+                  Segment Client
+                </label>
+                <div className="detail-value">
+                  <Badge bg="light" text="dark" className="segment-badge">
+                    {clientData?.client?.segment_client || "Non défini"}
+                  </Badge>
+                </div>
+              </div>
+              <div className="detail-item">
+                <label className="detail-label">
+                  <FaIdCard className="me-2" />
+                  Numéro Client
+                </label>
+                <div className="detail-value">
+                  {clientData?.client?.numero_client || "Non renseigné"}
+                </div>
               </div>
             </div>
-          </Col>
-          <Col md={6}>
-            <div className="profile-field">
-              <label className="profile-label">
-                <FaIdCard className="profile-icon" />
-                Numéro Client
-              </label>
-              <div className="profile-value">
-                {clientData?.client?.numero_client || "Non renseigné"}
-              </div>
-            </div>
-          </Col>
-          <Col md={6}>
-            <div className="profile-field">
-              <label className="profile-label">
-                <FaCalendarAlt className="profile-icon" />
-                Date de naissance
-              </label>
-              <div className="profile-value">
-                {clientData?.client?.date_naissance
-                  ? formatDate(clientData.client.date_naissance)
-                  : "Non renseigné"}
-              </div>
-            </div>
-          </Col>
-          <Col md={6}>
-            <div className="profile-field">
-              <label className="profile-label">
-                <FaUser className="profile-icon" />
-                Segment Client
-              </label>
-              <div className="profile-value">
-                {clientData?.client?.segment_client || "Non renseigné"}
-              </div>
-            </div>
-          </Col>
-          <Col xs={12}>
-            <div className="profile-field">
-              <label className="profile-label">
-                <FaMapMarkerAlt className="profile-icon" />
-                Adresse
-              </label>
-              <div className="profile-value">
-                {clientData?.client?.adresse || "Non renseigné"}
-              </div>
-            </div>
-          </Col>
-          <Col xs={12}>
-            <div className="profile-field">
-              <label className="profile-label">
-                <FaCalendarAlt className="profile-icon" />
-                Date de création du compte
-              </label>
-              <div className="profile-value">
-                {clientData?.created_at
-                  ? formatDate(clientData.created_at)
-                  : "Non disponible"}
-              </div>
-            </div>
-          </Col>
-        </Row>
+          </div>
+        </>
       )}
     </Modal.Body>
     <Modal.Footer className="profile-modal-footer">
@@ -1264,20 +1310,6 @@ const ClientInterface = () => {
             <Card className="empty-state-card">
               <Card.Body className="empty-state-body">
                 <div className="empty-state-content">
-                  <FaFileAlt className="empty-state-icon" />
-                  <h5 className="empty-state-title">
-                    Aucune réclamation trouvée
-                  </h5>
-                  <p className="empty-state-text">
-                    Vous n'avez pas encore créé de réclamation
-                  </p>
-                </div>
-              </Card.Body>
-            </Card>
-          ) : filteredReclamations.length === 0 ? (
-            <Card className="empty-state-card">
-              <Card.Body className="empty-state-body">
-                <div className="empty-state-content">
                   <FaSearch className="empty-state-icon" />
                   <h5 className="empty-state-title">Aucun résultat trouvé</h5>
                   <p className="empty-state-text">
@@ -1372,7 +1404,7 @@ const ClientInterface = () => {
         show={showDetails}
         onHide={() => setShowDetails(false)}
         centered
-        size="lg"
+        size="md"
         className="details-modal"
       >
         <Modal.Header closeButton className="details-modal-header">
