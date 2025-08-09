@@ -208,7 +208,7 @@ const ProfileModal = ({ show, onHide, clientData, loading }) => (
     show={show}
     onHide={onHide}
     centered
-    size="lg"
+    size="md"
     className="profile-modal"
   >
     <Modal.Header closeButton className="profile-modal-header">
@@ -229,9 +229,10 @@ const ProfileModal = ({ show, onHide, clientData, loading }) => (
         <>
           {/* Client Header */}
           <div className="client-header">
+            {/* AVATAR - Uncomment if you want to use avatar 
             <div className="client-avatar-large">
               {getInitials(clientData?.nom, clientData?.prenom)}
-            </div>
+            </div> */}
             <h3 className="client-name">
               {clientData?.nom && clientData?.prenom
                 ? `${clientData.prenom} ${clientData.nom}`
@@ -347,6 +348,7 @@ const ProfileModal = ({ show, onHide, clientData, loading }) => (
                   </Badge>
                 </div>
               </div>
+              {/* 
               <div className="detail-item">
                 <label className="detail-label">
                   <FaIdCard className="me-2" />
@@ -355,7 +357,7 @@ const ProfileModal = ({ show, onHide, clientData, loading }) => (
                 <div className="detail-value">
                   {clientData?.client?.numero_client || "Non renseigné"}
                 </div>
-              </div>
+              </div>*/}
             </div>
           </div>
         </>
