@@ -48,7 +48,6 @@ import {
   FaIdCard,
   FaMapMarkerAlt,
   FaEyeSlash,
-  FaCheck,
   FaExclamationTriangle,
   FaBirthdayCake,
   FaTags,
@@ -111,18 +110,6 @@ const getFullName = (clientData) => {
   const nom = clientData.nom || "";
   const prenom = clientData.prenom || "";
   return `${prenom} ${nom}`.trim() || "Client";
-};
-
-/**
- * Génère les initiales d'un client
- * @param {string} nom - Le nom de famille
- * @param {string} prenom - Le prénom
- * @returns {string} Les initiales en majuscules
- */
-const getInitials = (nom, prenom) => {
-  const n = nom?.charAt(0) || "";
-  const p = prenom?.charAt(0) || "";
-  return `${n}${p}`.toUpperCase() || "?";
 };
 
 /**
@@ -1231,7 +1218,6 @@ const ClientInterface = () => {
   const [showDetails, setShowDetails] = useState(false); // Affichage détails
   const [showProfile, setShowProfile] = useState(false); // Affichage profil
   const [showChangePassword, setShowChangePassword] = useState(false); // Affichage changement mot de passe
-  const [profileLoading, setProfileLoading] = useState(false); // Chargement profil
 
   const navigate = useNavigate();
 
@@ -1317,6 +1303,15 @@ const ClientInterface = () => {
   // ========================================
 
   /**
+   * Gère la déconnexion de l'utilisateur
+   */
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem("token");
+    toast.success("Déconnexion réussie");
+    navigate("/login");
+  }, [navigate]);
+
+  /**
    * Récupère les données du client connecté
    */
   const fetchClientData = useCallback(async () => {
@@ -1370,7 +1365,7 @@ const ClientInterface = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [handleLogout]);
 
   /**
    * Charge les données au montage du composant
@@ -1402,15 +1397,6 @@ const ClientInterface = () => {
   const handleViewDetails = (reclamation) => {
     setSelectedReclamation(reclamation);
     setShowDetails(true);
-  };
-
-  /**
-   * Gère la déconnexion de l'utilisateur
-   */
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    toast.success("Déconnexion réussie");
-    navigate("/login");
   };
 
   /**
@@ -1665,7 +1651,7 @@ const ClientInterface = () => {
         show={showProfile}
         onHide={() => setShowProfile(false)}
         clientData={clientData}
-        loading={profileLoading}
+        loading={false}
       />
 
       {/* Modal de changement de mot de passe */}
