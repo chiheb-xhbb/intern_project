@@ -1,0 +1,327 @@
+/* ===== STYLES GÉNÉRAUX ===== */
+
+/* Section principale de connexion */
+.login-section {
+  background-color: #eaeceeff;
+  min-height: 100vh;
+}
+
+/* Container principal */
+.login-container {
+  padding: 3rem 0;
+  height: 100%;
+}
+
+/* Centrage de la carte de connexion */
+.login-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+/* Colonnes responsive pour la carte */
+.login-col {
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .login-col {
+    max-width: 66.666667%;
+  }
+}
+
+@media (min-width: 992px) {
+  .login-col {
+    max-width: 50%;
+  }
+}
+
+@media (min-width: 1200px) {
+  .login-col {
+    max-width: 41.666667%;
+  }
+}
+
+/* ===== STYLES DE LA CARTE ===== */
+
+/* Carte principale de connexion */
+.login-card {
+  border-radius: 1rem;
+  box-shadow: 0 20px 20px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+/* Effet de survol sur la carte */
+.login-card:hover {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25) !important;
+  transform: translateY(-2px);
+}
+
+/* Corps de la carte */
+.login-card-body {
+  padding: 3rem;
+  text-align: center;
+}
+
+/* ===== STYLES DU LOGO ===== */
+
+/* Logo de l'entreprise */
+.company-logo {
+  width: 45%;
+  object-fit: contain;
+  margin-bottom: 2rem;
+}
+
+/* ===== STYLES DES CHAMPS DE SAISIE ===== */
+
+/* Container des champs flottants */
+.form-floating {
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+/* Champs de saisie */
+.form-control {
+  border-radius: 8px;
+  border: 2px solid #dee2e6;
+  padding: 1rem;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.form-control:focus {
+  border-color: #ce1313ff;
+  box-shadow: 0 0 0 0.2rem rgba(206, 19, 19, 0.25);
+}
+
+/* Labels des champs */
+.form-floating > label {
+  color: #6c757d;
+  font-weight: 400;
+}
+
+/* ===== STYLES DU CHAMP MOT DE PASSE ===== */
+
+/* Container du champ mot de passe */
+.password-field {
+  position: relative;
+}
+
+/* Bouton de basculement de visibilité du mot de passe */
+.password-toggle {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #6c757d;
+  cursor: pointer;
+  z-index: 3;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.password-toggle:hover {
+  color: #ce1313ff;
+  
+}
+
+.password-toggle:focus {
+  outline: none;
+  color: #ce1313ff;
+ 
+}
+
+/* ===== STYLES DES OPTIONS DE FORMULAIRE ===== */
+
+/* Container des options (Se souvenir du mot de passe) */
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+/* Checkbox "Se souvenir du mot de passe" */
+.form-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form-check-input {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 2px solid #dee2e6;
+  transition: all 0.3s ease;
+}
+
+.form-check-input:checked {
+  background-color: #ce1313ff;
+  border-color: #ce1313ff;
+}
+
+.form-check-label {
+  color: #6c757d;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin: 0;
+}
+
+/* Lien "Mot de passe oublié" */
+.forgot-password {
+  color: #ce1313ff;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.forgot-password:hover {
+  color: #a50f0f;
+  text-decoration: underline;
+}
+
+/* ===== STYLES DU BOUTON DE CONNEXION ===== */
+
+/* Bouton principal de connexion */
+.login-button {
+  width: 100%;
+  background: linear-gradient(135deg, #ce1313ff, #ff4757);
+  border: none;
+  border-radius: 12px;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* Effet de brillance sur le bouton */
+.login-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.login-button:hover::before {
+  left: 100%;
+}
+
+/* Effets de survol du bouton */
+.login-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(206, 19, 19, 0.3);
+}
+
+/* Effet de clic du bouton */
+.login-button:active {
+  transform: translateY(0);
+}
+
+/* État désactivé du bouton */
+.login-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* État de chargement du bouton */
+.login-button.loading {
+  pointer-events: none;
+}
+
+/* ===== STYLES DU SPINNER DE CHARGEMENT ===== */
+
+/* Spinner de chargement */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Animation de rotation du spinner */
+@keyframes spin {
+  0% { 
+    transform: rotate(0deg); 
+  }
+  100% { 
+    transform: rotate(360deg); 
+  }
+}
+
+/* ===== STYLES DES ALERTES ===== */
+
+/* Messages d'erreur */
+.alert-danger {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* Tablettes et mobiles */
+@media (max-width: 768px) {
+  /* Options de formulaire en colonne sur mobile */
+  .form-options {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  
+  /* Réduction du padding de la carte sur mobile */
+  .login-card-body {
+    padding: 2rem 1.5rem;
+  }
+  
+  /* Logo plus petit sur mobile */
+  .company-logo {
+    width: 60%;
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Bouton de connexion plus compact sur mobile */
+  .login-button {
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+  }
+}
+
+/* Très petits écrans */
+@media (max-width: 480px) {
+  .login-card-body {
+    padding: 1.5rem 1rem;
+  }
+  
+  .company-logo {
+    width: 70%;
+  }
+}
+

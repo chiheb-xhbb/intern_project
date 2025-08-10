@@ -2,64 +2,84 @@ import React, { useState } from "react";
 import axios from "../api/axios";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
+import "./Login.css";
 
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [motDePasse, setMotDePasse] = useState("");
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
+  // ===== ÉTATS DU COMPOSANT =====
+  const [email, setEmail] = useState(""); // Email de l'utilisateur
+  const [motDePasse, setMotDePasse] = useState(""); // Mot de passe de l'utilisateur
+  const [error, setError] = useState(""); // Message d'erreur
+  const [isLoading, setIsLoading] = useState(false); // État de chargement
+  const [showPassword, setShowPassword] = useState(false); // Visibilité du mot de passe
+  const navigate = useNavigate(); // Hook pour la navigation
 
+  // ===== GESTIONNAIRE DE CONNEXION =====
   const handleLogin = async (e) => {
     e.preventDefault();
+    setIsLoading(true); // Démarrer le chargement
+    setError(""); // Réinitialiser les erreurs
+
     try {
+      // Envoi de la requête de connexion
       const response = await axios.post("/login", {
         email,
         password: motDePasse,
       });
+
       const user = response.data.user;
+
+      // Stockage des données utilisateur et du token
       localStorage.setItem("token", response.data.access_token);
       localStorage.setItem("user", JSON.stringify(user));
+
+      // Redirection selon le rôle de l'utilisateur
       if (user.admin) {
-        navigate("/dashboard"); // page admin
+        navigate("/dashboard"); // Page administrateur
       } else if (user.client) {
-        navigate("/ClientInterface"); // page client
+        navigate("/ClientInterface"); // Page client
       } else {
-        setError("Aucun rôle associé.");
+        setError("Aucun rôle associé à ce compte.");
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Échec de connexion");
+      // Gestion des erreurs de connexion
+      setError(err.response?.data?.message || "Échec de la connexion");
+    } finally {
+      setIsLoading(false); // Arrêter le chargement
     }
   };
 
+  // ===== BASCULEMENT DE LA VISIBILITÉ DU MOT DE PASSE =====
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  // ===== RENDU DU COMPOSANT =====
   return (
-    <section
-      className="vh-100"
-      style={{ backgroundColor: "#f8f9fa" }}
-      id="login-section"
-    >
-      <div className="container py-5 h-100">
-        <div className="row d-flex justify-content-center align-items-center h-100" >
-          <div className="col-12 col-md-8 col-lg-6 col-xl-5">
-            <div
-              className="card shadow-2-strong"
-              style={{ borderRadius: "1rem" ,boxShadow: "0 0 10px rgba(0,0,0,0.1)"}}
-            >
-              <div className="card-body p-5 text-center">
-                <img
-                  src="IMAGES/logo.png"
-                  alt="Company Logo"
-                  style={{
-                    width: "45%",
-                    objectFit: "contain",
-                    marginBottom: "2rem",
-                  }}
-                />
+    <section className="vh-100 login-section" id="login-section">
+      <div className="container login-container">
+        <div className="row login-row">
+          <div className="col-12 col-md-8 col-lg-6 col-xl-5 login-col">
+            {/* Carte principale de connexion */}
+            <div className="card shadow-2-strong login-card">
+              <div className="card-body login-card-body">
+                {/* Logo de l'entreprise */}
+                <div className="logo-container">
+                  <img
+                    src="IMAGES/logo.png"
+                    alt="Company Logo"
+                    className="company-logo"
+                    loading="lazy"
+                  />
+                </div>
+
+                {/* Formulaire de connexion */}
                 <form onSubmit={handleLogin}>
+                  {/* Champ Email */}
                   <div className="form-floating mb-4">
                     <input
                       type="email"
                       id="typeEmailX-2"
-                      className="form-control form-control"
+                      className="form-control"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -67,37 +87,97 @@ const Login = () => {
                     />
                     <label htmlFor="typeEmailX-2">Email</label>
                   </div>
-                  <div className="form-floating mb-4">
+
+                  {/* Champ Mot de passe */}
+                  <div className="form-floating mb-4 password-field">
                     <input
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       id="typePasswordX-2"
-                      className="form-control form-control"
+                      className="form-control"
                       value={motDePasse}
                       onChange={(e) => setMotDePasse(e.target.value)}
                       required
                       placeholder=" "
                     />
-                    <label htmlFor="typePasswordX-2">Password</label>
+                    <label htmlFor="typePasswordX-2">Mot de passe</label>
+
+                    {/* Bouton de basculement de visibilité du mot de passe */}
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      onClick={togglePasswordVisibility}
+                      aria-label={
+                        showPassword
+                          ? "Masquer le mot de passe"
+                          : "Afficher le mot de passe"
+                      }
+                    >
+                      {/* Icône œil barré (mot de passe visible) */}
+                      {showPassword ? (
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                          <line x1="1" y1="1" x2="23" y2="23" />
+                        </svg>
+                      ) : (
+                        // Icône œil (mot de passe masqué)
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
+                      )}
+                    </button>
                   </div>
-                  <div className="form-check d-flex justify-content-start mb-4">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      id="checkb1"
-                    />
-                    <label className="form-check-label ms-2" htmlFor="checkb1">
-                      Remember password
-                    </label>
+
+                  {/* Options du formulaire */}
+                  <div className="form-options">
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id="rememberMe"
+                      />
+                      <label className="form-check-label" htmlFor="rememberMe">
+                        Se souvenir du mot de passe
+                      </label>
+                    </div>
                   </div>
-                  {error && <div className="alert alert-danger">{error}</div>}
+
+                  {/* Affichage des erreurs */}
+                  {error && (
+                    <div className="alert alert-danger" role="alert">
+                      {error}
+                    </div>
+                  )}
+
+                  {/* Bouton de connexion */}
                   <button
-                    style={{ backgroundColor: "#ce1313ff" }}
-                    className="btn btn-primary btn-lg btn-block w-100"
+                    className={`login-button ${isLoading ? "loading" : ""}`}
                     type="submit"
+                    disabled={isLoading}
                   >
-                    Login
+                    {isLoading ? (
+                      <>
+                        <div className="spinner"></div>
+                        Connexion en cours...
+                      </>
+                    ) : (
+                      "Se connecter"
+                    )}
                   </button>
-                  <hr className="my-4" />
                 </form>
               </div>
             </div>
