@@ -1,20 +1,20 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { 
-  Card, 
-  Row, 
-  Col, 
-  Table, 
-  Button, 
-  Form, 
-  Dropdown, 
-  Pagination, 
+import {
+  Card,
+  Row,
+  Col,
+  Table,
+  Button,
+  Form,
+  Dropdown,
+  Pagination,
   InputGroup,
   Modal,
   Badge,
   OverlayTrigger,
   Tooltip,
   Spinner,
-  Alert
+  Alert,
 } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import {
@@ -36,59 +36,69 @@ import {
   FaUser,
   FaCalendarAlt,
   FaTag,
-  FaExclamationTriangle
+  FaExclamationTriangle,
 } from "react-icons/fa";
 import AdminSidebar from "../components/AdminSidebar";
 import axios from "../api/axios";
 import { toast } from "react-toastify";
 import "./AdminReclamations.css";
-import { createPortal } from "react-dom";
-// Configuration des statuts avec couleurs et icônes
+
+/**
+ * Configuration des statuts avec couleurs et icônes
+ * Définit l'apparence et les métadonnées pour chaque statut de réclamation
+ */
 const STATUS_CONFIG = {
   "en attente": {
     label: "En attente",
     variant: "warning",
     color: "#ffc107",
     icon: FaClock,
-    bgColor: "#fff3cd"
+    bgColor: "#fff3cd",
   },
   "en cours": {
-    label: "En cours", 
+    label: "En cours",
     variant: "info",
     color: "#17a2b8",
     icon: FaSpinner,
-    bgColor: "#d1ecf1"
+    bgColor: "#d1ecf1",
   },
-  "résolue": {
+  résolue: {
     label: "Résolue",
-    variant: "success", 
+    variant: "success",
     color: "#28a745",
     icon: FaCheckCircle,
-    bgColor: "#d4edda"
+    bgColor: "#d4edda",
   },
-  "rejetée": {
+  rejetée: {
     label: "Rejetée",
     variant: "danger",
-    color: "#dc3545", 
+    color: "#dc3545",
     icon: FaTimesCircle,
-    bgColor: "#f8d7da"
+    bgColor: "#f8d7da",
   },
-  "clôturée": {
+  clôturée: {
     label: "Clôturée",
     variant: "secondary",
     color: "#6c757d",
     icon: FaLock,
-    bgColor: "#e2e3e5"
-  }
+    bgColor: "#e2e3e5",
+  },
 };
 
+// Options de statut disponibles
 const STATUS_OPTIONS = Object.keys(STATUS_CONFIG);
+
+// Nombre d'éléments par page pour la pagination
 const PAGE_SIZE = 8;
 
-// Fonction helper pour mapper les données de l'API
+/**
+ * Fonction helper pour mapper les données de l'API vers le format attendu par l'interface
+ * @param {Object} apiData - Données brutes de l'API
+ * @returns {Object} Données formatées pour l'affichage
+ */
 const mapReclamationData = (apiData) => ({
   id: apiData.id,
-  client: apiData.client?.personne 
+  client: apiData.client?.personne
     ? `${apiData.client.personne.nom} ${apiData.client.personne.prenom}`
     : "-",
   type: apiData.type_reclamation,
@@ -99,31 +109,44 @@ const mapReclamationData = (apiData) => ({
   pieces_jointes: apiData.pieces_jointes || [],
 });
 
-// Fonction helper pour calculer les statistiques
+/**
+ * Fonction helper pour calculer les statistiques par statut
+ * @param {Array} reclamations - Liste des réclamations
+ * @returns {Object} Objet contenant le nombre de réclamations par statut
+ */
 const calculateStatusStats = (reclamations) => {
   const stats = {};
-  STATUS_OPTIONS.forEach(status => stats[status] = 0);
-  reclamations.forEach(r => {
+  // Initialiser tous les statuts à 0
+  STATUS_OPTIONS.forEach((status) => (stats[status] = 0));
+
+  // Compter les réclamations par statut
+  reclamations.forEach((r) => {
     if (stats.hasOwnProperty(r.statut)) {
       stats[r.statut]++;
     }
   });
+
   return stats;
 };
 
-// Composant pour les cartes de statistiques
+/**
+ * Composant pour afficher les cartes de statistiques par statut
+ * @param {string} status - Le statut concerné
+ * @param {number} count - Le nombre de réclamations avec ce statut
+ * @param {Function} onClick - Fonction appelée lors du clic sur la carte
+ */
 const StatusCard = ({ status, count, onClick }) => {
   const config = STATUS_CONFIG[status];
   const IconComponent = config.icon;
-  
+
   return (
-    <Card 
+    <Card
       className="status-overview-card h-100 border-0 shadow-sm"
-      style={{ cursor: onClick ? 'pointer' : 'default' }}
+      style={{ cursor: onClick ? "pointer" : "default" }}
       onClick={onClick}
     >
       <Card.Body className="p-3 text-center">
-        <div 
+        <div
           className="status-icon-wrapper mx-auto mb-2"
           style={{ backgroundColor: config.bgColor }}
         >
@@ -132,10 +155,7 @@ const StatusCard = ({ status, count, onClick }) => {
         <Card.Subtitle className="status-card-label mb-2">
           {config.label}
         </Card.Subtitle>
-        <Badge 
-          bg={config.variant} 
-          className="status-count-badge"
-        >
+        <Badge bg={config.variant} className="status-count-badge">
           {count}
         </Badge>
       </Card.Body>
@@ -143,7 +163,13 @@ const StatusCard = ({ status, count, onClick }) => {
   );
 };
 
-// Composant pour le badge de statut avec positionnement dynamique
+/**
+ * Composant pour le badge de statut avec dropdown pour modification
+ * @param {string} status - Statut actuel
+ * @param {Function} onStatusChange - Callback lors du changement de statut
+ * @param {boolean} disabled - Si le dropdown est désactivé
+ * @param {number} rowIndex - Index de la ligne (pour le positionnement)
+ */
 const StatusBadge = ({
   status,
   onStatusChange,
@@ -155,11 +181,14 @@ const StatusBadge = ({
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Handle dropdown toggle and row z-index
+  /**
+   * Gestionnaire d'ouverture/fermeture du dropdown
+   * Ajoute/retire une classe CSS sur la ligne parent pour gérer le z-index
+   */
   const handleToggle = (isOpening) => {
     setIsOpen(isOpening);
 
-    // Add/remove class to parent row for z-index management
+    // Gestion du z-index de la ligne parent
     const tableRow = dropdownRef.current?.closest(".table-row");
     if (tableRow) {
       if (isOpening) {
@@ -170,15 +199,22 @@ const StatusBadge = ({
     }
   };
 
-  // Clean up on unmount
+  /**
+   * Nettoyage lors du démontage du composant
+   * Correction du warning React hooks/exhaustive-deps
+   */
   useEffect(() => {
+    // Capturer la référence actuelle pour le nettoyage
+    const currentRef = dropdownRef.current;
+
     return () => {
-      const tableRow = dropdownRef.current?.closest(".table-row");
+      // Utiliser la référence capturée au lieu de dropdownRef.current
+      const tableRow = currentRef?.closest(".table-row");
       if (tableRow) {
         tableRow.classList.remove("dropdown-open");
       }
     };
-  }, []);
+  }, []); // Dépendances vides car on utilise la référence capturée
 
   return (
     <div className="status-dropdown-container" ref={dropdownRef}>
@@ -202,7 +238,7 @@ const StatusBadge = ({
         <Dropdown.Menu
           className="status-dropdown-menu"
           popperConfig={{
-            strategy: "fixed", // Use fixed positioning
+            strategy: "fixed", // Positionnement fixe
             modifiers: [
               {
                 name: "preventOverflow",
@@ -258,7 +294,12 @@ const StatusBadge = ({
   );
 };
 
-// Composant pour les boutons d'action
+/**
+ * Composant pour les boutons d'action (Voir/Supprimer)
+ * @param {Object} reclamation - La réclamation concernée
+ * @param {Function} onView - Callback pour voir les détails
+ * @param {Function} onDelete - Callback pour supprimer
+ */
 const ActionButtons = ({ reclamation, onView, onDelete }) => (
   <div className="action-buttons d-flex gap-2">
     <OverlayTrigger
@@ -274,7 +315,7 @@ const ActionButtons = ({ reclamation, onView, onDelete }) => (
         <FaEye />
       </Button>
     </OverlayTrigger>
-    
+
     <OverlayTrigger
       placement="top"
       overlay={<Tooltip>Supprimer la réclamation</Tooltip>}
@@ -291,8 +332,21 @@ const ActionButtons = ({ reclamation, onView, onDelete }) => (
   </div>
 );
 
-// Composant pour l'en-tête de colonne triable
-const SortableHeader = ({ column, currentSort, currentDir, onSort, children }) => (
+/**
+ * Composant pour l'en-tête de colonne triable
+ * @param {string} column - Nom de la colonne
+ * @param {string} currentSort - Colonne actuellement triée
+ * @param {string} currentDir - Direction du tri (asc/desc)
+ * @param {Function} onSort - Callback pour changer le tri
+ * @param {ReactNode} children - Contenu de l'en-tête
+ */
+const SortableHeader = ({
+  column,
+  currentSort,
+  currentDir,
+  onSort,
+  children,
+}) => (
   <th
     className="sortable-header"
     onClick={() => onSort(column)}
@@ -302,7 +356,11 @@ const SortableHeader = ({ column, currentSort, currentDir, onSort, children }) =
       <span>{children}</span>
       <span className="sort-icon">
         {currentSort === column ? (
-          currentDir === "asc" ? <FaSortUp /> : <FaSortDown />
+          currentDir === "asc" ? (
+            <FaSortUp />
+          ) : (
+            <FaSortDown />
+          )
         ) : (
           <FaSort className="text-muted" />
         )}
@@ -311,12 +369,30 @@ const SortableHeader = ({ column, currentSort, currentDir, onSort, children }) =
   </th>
 );
 
-// Modal de confirmation
-const ConfirmationModal = ({ show, onHide, onConfirm, title, message, variant = "danger" }) => (
+/**
+ * Modal de confirmation générique
+ * @param {boolean} show - Si le modal est affiché
+ * @param {Function} onHide - Callback pour fermer le modal
+ * @param {Function} onConfirm - Callback pour confirmer l'action
+ * @param {string} title - Titre du modal
+ * @param {string} message - Message de confirmation
+ * @param {string} variant - Variante de couleur (danger, warning, etc.)
+ */
+const ConfirmationModal = ({
+  show,
+  onHide,
+  onConfirm,
+  title,
+  message,
+  variant = "danger",
+}) => (
   <Modal show={show} onHide={onHide} centered>
     <Modal.Header closeButton className="border-0">
       <Modal.Title className="d-flex align-items-center">
-        <FaExclamationTriangle className="me-2" style={{ color: variant === "danger" ? "#dc3545" : "#ffc107" }} />
+        <FaExclamationTriangle
+          className="me-2"
+          style={{ color: variant === "danger" ? "#dc3545" : "#ffc107" }}
+        />
         {title}
       </Modal.Title>
     </Modal.Header>
@@ -334,42 +410,49 @@ const ConfirmationModal = ({ show, onHide, onConfirm, title, message, variant = 
   </Modal>
 );
 
+/**
+ * Composant principal pour la gestion des réclamations administrateur
+ */
 const AdminReclamations = () => {
-  // États principaux
-  const [search, setSearch] = useState("");
-  const [reclamations, setReclamations] = useState([]);
-  const [filtered, setFiltered] = useState([]);
-  const [page, setPage] = useState(1);
-  const [sortBy, setSortBy] = useState("date");
-  const [sortDir, setSortDir] = useState("desc");
-  const [statusStats, setStatusStats] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  
-  // États pour les modals
+  // États principaux pour les données et l'interface
+  const [search, setSearch] = useState(""); // Terme de recherche
+  const [reclamations, setReclamations] = useState([]); // Toutes les réclamations
+  const [filtered, setFiltered] = useState([]); // Réclamations filtrées
+  const [page, setPage] = useState(1); // Page actuelle de pagination
+  const [sortBy, setSortBy] = useState("date"); // Colonne de tri
+  const [sortDir, setSortDir] = useState("desc"); // Direction du tri
+  const [statusStats, setStatusStats] = useState({}); // Statistiques par statut
+  const [loading, setLoading] = useState(true); // État de chargement
+  const [error, setError] = useState(""); // Message d'erreur
+
+  // États pour les modals de confirmation et détails
   const [selectedReclamation, setSelectedReclamation] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showStatusConfirm, setShowStatusConfirm] = useState(false);
-  const [pendingAction, setPendingAction] = useState(null);
-  
+  const [pendingAction, setPendingAction] = useState(null); // Action en attente de confirmation
+
   const navigate = useNavigate();
 
-  // Fonction pour récupérer les données
+  /**
+   * Fonction pour récupérer les réclamations depuis l'API
+   * Utilise useCallback pour éviter les re-rendus inutiles
+   */
   const fetchReclamations = useCallback(async () => {
     setLoading(true);
     setError("");
-    
+
     try {
       const token = localStorage.getItem("token");
       if (!token) {
         throw new Error("Token d'authentification manquant");
       }
-      
+
       const response = await axios.get("/reclamations", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      
+
+      // Mapper les données API vers le format attendu
       const data = response.data.data.data.map(mapReclamationData);
       setReclamations(data);
     } catch (err) {
@@ -381,29 +464,33 @@ const AdminReclamations = () => {
     }
   }, []);
 
-  // Effet pour charger les données
+  // Charger les données au montage du composant
   useEffect(() => {
     fetchReclamations();
   }, [fetchReclamations]);
 
-  // Effet pour filtrer et trier
+  /**
+   * Effet pour filtrer et trier les réclamations
+   * Se déclenche à chaque changement de recherche, tri ou données
+   */
   useEffect(() => {
     let data = [...reclamations];
-    
-    // Filtrage
+
+    // Filtrage par terme de recherche
     if (search.trim()) {
       const searchLower = search.toLowerCase();
-      data = data.filter(r =>
-        r.id.toString().includes(search) ||
-        r.client.toLowerCase().includes(searchLower) ||
-        r.type.toLowerCase().includes(searchLower)
+      data = data.filter(
+        (r) =>
+          r.id.toString().includes(search) ||
+          r.client.toLowerCase().includes(searchLower) ||
+          r.type.toLowerCase().includes(searchLower)
       );
     }
-    
-    // Tri
+
+    // Tri des données
     data.sort((a, b) => {
       let comparison = 0;
-      
+
       switch (sortBy) {
         case "date":
           comparison = a.date.localeCompare(b.date);
@@ -420,100 +507,136 @@ const AdminReclamations = () => {
         default:
           return 0;
       }
-      
+
       return sortDir === "asc" ? comparison : -comparison;
     });
-    
+
+    // Mettre à jour les données filtrées et les statistiques
     setFiltered(data);
     setStatusStats(calculateStatusStats(data));
-    setPage(1);
+    setPage(1); // Retourner à la première page après filtrage
   }, [search, sortBy, sortDir, reclamations]);
 
-  // Pagination
+  // Calcul des données paginées
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
 
-  // Gestionnaires d'événements
+  /**
+   * Gestionnaire pour le tri des colonnes
+   * @param {string} column - Colonne à trier
+   */
   const handleSort = (column) => {
     if (sortBy === column) {
-      setSortDir(dir => dir === "asc" ? "desc" : "asc");
+      // Inverser la direction si même colonne
+      setSortDir((dir) => (dir === "asc" ? "desc" : "asc"));
     } else {
+      // Nouvelle colonne, tri ascendant par défaut
       setSortBy(column);
       setSortDir("asc");
     }
   };
 
+  /**
+   * Gestionnaire pour le changement de statut
+   * @param {number} id - ID de la réclamation
+   * @param {string} newStatus - Nouveau statut
+   */
   const handleStatusChange = (id, newStatus) => {
-    setPendingAction({ type: 'status', id, newStatus });
+    setPendingAction({ type: "status", id, newStatus });
     setShowStatusConfirm(true);
   };
 
+  /**
+   * Confirmation du changement de statut
+   */
   const confirmStatusChange = async () => {
     if (!pendingAction) return;
-    
+
     const { id, newStatus } = pendingAction;
     const token = localStorage.getItem("token");
-    
+
     try {
       await axios.put(
         `/reclamations/${id}/statut`,
         { statut: newStatus, commentaire: "" },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
+
+      // Recharger les données après mise à jour
       await fetchReclamations();
       toast.success("Statut mis à jour avec succès");
     } catch (err) {
       console.error("Erreur lors de la mise à jour du statut:", err);
       toast.error("Erreur lors de la mise à jour du statut");
     } finally {
+      // Nettoyer les états de confirmation
       setShowStatusConfirm(false);
       setPendingAction(null);
     }
   };
 
+  /**
+   * Gestionnaire pour la suppression
+   * @param {number} id - ID de la réclamation à supprimer
+   */
   const handleDelete = (id) => {
-    setPendingAction({ type: 'delete', id });
+    setPendingAction({ type: "delete", id });
     setShowDeleteConfirm(true);
   };
 
+  /**
+   * Confirmation de la suppression
+   */
   const confirmDelete = async () => {
     if (!pendingAction) return;
-    
+
     const { id } = pendingAction;
     const token = localStorage.getItem("token");
-    
+
     try {
       await axios.delete(`/reclamations/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      
+
+      // Recharger les données après suppression
       await fetchReclamations();
       toast.success("Réclamation supprimée avec succès");
     } catch (err) {
       console.error("Erreur lors de la suppression:", err);
       toast.error("Erreur lors de la suppression");
     } finally {
+      // Nettoyer les états de confirmation
       setShowDeleteConfirm(false);
       setPendingAction(null);
     }
   };
 
+  /**
+   * Gestionnaire pour voir les détails d'une réclamation
+   * @param {Object} reclamation - La réclamation à afficher
+   */
   const handleViewDetails = (reclamation) => {
     setSelectedReclamation(reclamation);
     setShowDetails(true);
   };
 
+  /**
+   * Effacer le terme de recherche
+   */
   const clearSearch = () => {
     setSearch("");
   };
 
+  // Affichage du spinner de chargement
   if (loading) {
     return (
       <>
         <AdminSidebar />
         <div className="container py-4">
-          <div className="d-flex justify-content-center align-items-center" style={{ height: "400px" }}>
+          <div
+            className="d-flex justify-content-center align-items-center"
+            style={{ height: "400px" }}
+          >
             <div className="text-center">
               <Spinner animation="border" variant="primary" />
               <p className="mt-3 text-muted">Chargement des réclamations...</p>
@@ -529,7 +652,7 @@ const AdminReclamations = () => {
       <AdminSidebar />
       <div className="admin-reclamations">
         <div className="container-fluid py-4">
-          {/* Header */}
+          {/* En-tête de la page */}
           <div className="page-header mb-4">
             <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
               <div>
@@ -552,26 +675,28 @@ const AdminReclamations = () => {
             </div>
           </div>
 
-          {/* Error Alert */}
+          {/* Alerte d'erreur */}
           {error && (
-            <Alert variant="danger" dismissible onClose={() => setError("")} className="mb-4">
+            <Alert
+              variant="danger"
+              dismissible
+              onClose={() => setError("")}
+              className="mb-4"
+            >
               {error}
             </Alert>
           )}
 
-          {/* Stats Cards */}
+          {/* Cartes de statistiques */}
           <Row className="mb-4 g-3">
-            {STATUS_OPTIONS.map(status => (
+            {STATUS_OPTIONS.map((status) => (
               <Col xs={6} lg={2} key={status}>
-                <StatusCard
-                  status={status}
-                  count={statusStats[status] || 0}
-                />
+                <StatusCard status={status} count={statusStats[status] || 0} />
               </Col>
             ))}
           </Row>
 
-          {/* Search Bar */}
+          {/* Barre de recherche */}
           <Card className="search-card mb-4 border-0 shadow-sm">
             <Card.Body>
               <InputGroup className="search-input-group">
@@ -597,24 +722,44 @@ const AdminReclamations = () => {
             </Card.Body>
           </Card>
 
-          {/* Table */}
+          {/* Tableau des réclamations */}
           <Card className="table-card border-0 shadow-sm">
             <Card.Body className="p-0">
               <div className="table-responsive">
                 <Table hover className="reclamations-table mb-0">
                   <thead className="table-header">
                     <tr>
-                      <SortableHeader column="id" currentSort={sortBy} currentDir={sortDir} onSort={handleSort}>
+                      <SortableHeader
+                        column="id"
+                        currentSort={sortBy}
+                        currentDir={sortDir}
+                        onSort={handleSort}
+                      >
                         ID
                       </SortableHeader>
-                      <SortableHeader column="client" currentSort={sortBy} currentDir={sortDir} onSort={handleSort}>
+                      <SortableHeader
+                        column="client"
+                        currentSort={sortBy}
+                        currentDir={sortDir}
+                        onSort={handleSort}
+                      >
                         Client
                       </SortableHeader>
                       <th>Type</th>
-                      <SortableHeader column="statut" currentSort={sortBy} currentDir={sortDir} onSort={handleSort}>
+                      <SortableHeader
+                        column="statut"
+                        currentSort={sortBy}
+                        currentDir={sortDir}
+                        onSort={handleSort}
+                      >
                         Statut
                       </SortableHeader>
-                      <SortableHeader column="date" currentSort={sortBy} currentDir={sortDir} onSort={handleSort}>
+                      <SortableHeader
+                        column="date"
+                        currentSort={sortBy}
+                        currentDir={sortDir}
+                        onSort={handleSort}
+                      >
                         Date de réception
                       </SortableHeader>
                       <th className="text-center">Actions</th>
@@ -622,21 +767,29 @@ const AdminReclamations = () => {
                   </thead>
                   <tbody>
                     {paginated.length === 0 ? (
+                      // État vide
                       <tr>
                         <td colSpan={6} className="text-center py-5">
                           <div className="empty-state">
                             <FaFileAlt size={48} className="text-muted mb-3" />
-                            <h5 className="text-muted">Aucune réclamation trouvée</h5>
+                            <h5 className="text-muted">
+                              Aucune réclamation trouvée
+                            </h5>
                             <p className="text-muted mb-0">
-                              {search ? "Essayez de modifier vos critères de recherche" : "Aucune réclamation n'a été créée"}
+                              {search
+                                ? "Essayez de modifier vos critères de recherche"
+                                : "Aucune réclamation n'a été créée"}
                             </p>
                           </div>
                         </td>
                       </tr>
                     ) : (
+                      // Lignes de données
                       paginated.map((reclamation, index) => (
                         <tr key={reclamation.id} className="table-row">
-                          <td className="fw-bold text-primary">#{reclamation.id}</td>
+                          <td className="fw-bold text-primary">
+                            #{reclamation.id}
+                          </td>
                           <td>
                             <div className="d-flex align-items-center">
                               <FaUser className="me-2 text-muted" size={14} />
@@ -644,20 +797,29 @@ const AdminReclamations = () => {
                             </div>
                           </td>
                           <td>
-                            <Badge bg="light" text="dark" className="type-badge">
+                            <Badge
+                              bg="light"
+                              text="dark"
+                              className="type-badge"
+                            >
                               {reclamation.type}
                             </Badge>
                           </td>
                           <td>
                             <StatusBadge
                               status={reclamation.statut}
-                              onStatusChange={(newStatus) => handleStatusChange(reclamation.id, newStatus)}
+                              onStatusChange={(newStatus) =>
+                                handleStatusChange(reclamation.id, newStatus)
+                              }
                               rowIndex={index}
                             />
                           </td>
                           <td>
                             <div className="d-flex align-items-center">
-                              <FaCalendarAlt className="me-2 text-muted" size={14} />
+                              <FaCalendarAlt
+                                className="me-2 text-muted"
+                                size={14}
+                              />
                               {reclamation.date || "-"}
                             </div>
                           </td>
@@ -681,7 +843,9 @@ const AdminReclamations = () => {
           {totalPages > 1 && (
             <div className="d-flex justify-content-between align-items-center mt-4">
               <div className="pagination-info text-muted">
-                Affichage de {(page - 1) * PAGE_SIZE + 1} à {Math.min(page * PAGE_SIZE, filtered.length)} sur {filtered.length} résultats
+                Affichage de {(page - 1) * PAGE_SIZE + 1} à{" "}
+                {Math.min(page * PAGE_SIZE, filtered.length)} sur{" "}
+                {filtered.length} résultats
               </div>
               <Pagination className="mb-0 custom-pagination">
                 <Pagination.First
@@ -689,11 +853,12 @@ const AdminReclamations = () => {
                   disabled={page === 1}
                 />
                 <Pagination.Prev
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
                 />
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  const pageNum = Math.max(1, Math.min(totalPages - 4, page - 2)) + i;
+                  const pageNum =
+                    Math.max(1, Math.min(totalPages - 4, page - 2)) + i;
                   return (
                     <Pagination.Item
                       key={pageNum}
@@ -705,7 +870,7 @@ const AdminReclamations = () => {
                   );
                 })}
                 <Pagination.Next
-                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
                 />
                 <Pagination.Last
@@ -750,14 +915,14 @@ const AdminReclamations = () => {
                     <FaUser className="me-2" />
                     Client
                   </label>
-                  <div className="detail-value">{selectedReclamation.client}</div>
+                  <div className="detail-value">
+                    {selectedReclamation.client}
+                  </div>
                 </div>
               </Col>
               <Col md={6}>
                 <div className="detail-item">
-                  <label className="detail-label">
-                    Type de réclamation
-                  </label>
+                  <label className="detail-label">Type de réclamation</label>
                   <div className="detail-value">
                     <Badge bg="primary">{selectedReclamation.type}</Badge>
                   </div>
@@ -765,11 +930,11 @@ const AdminReclamations = () => {
               </Col>
               <Col md={6}>
                 <div className="detail-item">
-                  <label className="detail-label">
-                    Statut actuel
-                  </label>
+                  <label className="detail-label">Statut actuel</label>
                   <div className="detail-value">
-                    <Badge bg={STATUS_CONFIG[selectedReclamation.statut]?.variant}>
+                    <Badge
+                      bg={STATUS_CONFIG[selectedReclamation.statut]?.variant}
+                    >
                       {STATUS_CONFIG[selectedReclamation.statut]?.label}
                     </Badge>
                   </div>
@@ -777,10 +942,10 @@ const AdminReclamations = () => {
               </Col>
               <Col md={6}>
                 <div className="detail-item">
-                  <label className="detail-label">
-                    Numéro de compte
-                  </label>
-                  <div className="detail-value">{selectedReclamation.compte_bancaire}</div>
+                  <label className="detail-label">Numéro de compte</label>
+                  <div className="detail-value">
+                    {selectedReclamation.compte_bancaire}
+                  </div>
                 </div>
               </Col>
               <Col md={6}>
@@ -789,16 +954,17 @@ const AdminReclamations = () => {
                     <FaCalendarAlt className="me-2" />
                     Date de réception
                   </label>
-                  <div className="detail-value">{selectedReclamation.date || "-"}</div>
+                  <div className="detail-value">
+                    {selectedReclamation.date || "-"}
+                  </div>
                 </div>
               </Col>
               <Col xs={12}>
                 <div className="detail-item">
-                  <label className="detail-label">
-                    Description
-                  </label>
+                  <label className="detail-label">Description</label>
                   <div className="detail-value description-text">
-                    {selectedReclamation.description || "Aucune description fournie"}
+                    {selectedReclamation.description ||
+                      "Aucune description fournie"}
                   </div>
                 </div>
               </Col>
@@ -823,7 +989,8 @@ const AdminReclamations = () => {
                               {pj.description || `Fichier ${index + 1}`}
                             </a>
                             <small className="text-muted ms-2">
-                              ({pj.type_fichier}, {Math.round(pj.taille_fichier / 1024)} Ko)
+                              ({pj.type_fichier},{" "}
+                              {Math.round(pj.taille_fichier / 1024)} Ko)
                             </small>
                           </div>
                         ))}
@@ -863,7 +1030,9 @@ const AdminReclamations = () => {
         onHide={() => setShowStatusConfirm(false)}
         onConfirm={confirmStatusChange}
         title="Confirmer le changement de statut"
-        message={`Êtes-vous sûr de vouloir changer le statut vers "${STATUS_CONFIG[pendingAction?.newStatus]?.label}" ?`}
+        message={`Êtes-vous sûr de vouloir changer le statut vers "${
+          STATUS_CONFIG[pendingAction?.newStatus]?.label
+        }" ?`}
         variant="warning"
       />
     </>

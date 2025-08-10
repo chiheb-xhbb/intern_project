@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Card,
-  Row,
-  Col,
   Table,
   Button,
   Form,
@@ -15,7 +13,6 @@ import {
   Spinner,
   Alert,
 } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
 import {
   FaEye,
   FaSearch,
@@ -25,11 +22,9 @@ import {
   FaSortDown,
   FaUser,
   FaUsers,
-  FaFilter,
   FaPhone,
   FaEnvelope,
   FaMapMarkerAlt,
-  FaCalendarAlt,
   FaIdCard,
   FaTags,
   FaBirthdayCake,
@@ -39,16 +34,26 @@ import axios from "../api/axios";
 import { toast } from "react-toastify";
 import "./AdminClients.css";
 
+// Configuration constants
 const PAGE_SIZE = 8;
 
-// Fonction helper pour obtenir les initiales
+/**
+ * Helper function to generate initials from first and last name
+ * @param {string} nom - Last name
+ * @param {string} prenom - First name
+ * @returns {string} Uppercased initials or "?" if no names provided
+ */
 const getInitials = (nom, prenom) => {
   const n = nom?.charAt(0) || "";
   const p = prenom?.charAt(0) || "";
   return `${n}${p}`.toUpperCase() || "?";
 };
 
-// Fonction helper pour mapper les données de l'API
+/**
+ * Helper function to map API response data to client object structure
+ * @param {Object} apiData - Raw data from API
+ * @returns {Object} Mapped client data object
+ */
 const mapClientData = (apiData) => ({
   id: apiData.id,
   numeroClient: apiData.numero_client || "-",
@@ -64,29 +69,12 @@ const mapClientData = (apiData) => ({
   segment: apiData.segment_client || "-",
 });
 
-// Composant pour les cartes de statistiques
-const StatsCard = ({
-  title,
-  count,
-  icon: IconComponent,
-  variant = "primary",
-}) => {
-  return (
-    <Card className="stats-overview-card h-100 border-0 shadow-sm">
-      <Card.Body className="p-3 text-center">
-        <div className="stats-icon-wrapper mx-auto mb-2">
-          <IconComponent style={{ color: "white" }} size={20} />
-        </div>
-        <Card.Subtitle className="stats-card-label mb-2">{title}</Card.Subtitle>
-        <Badge bg={variant} className="stats-count-badge">
-          {count}
-        </Badge>
-      </Card.Body>
-    </Card>
-  );
-};
-
-// Composant pour les boutons d'action
+/**
+ * Component for displaying action buttons in table rows
+ * @param {Object} props - Component props
+ * @param {Object} props.client - Client data object
+ * @param {Function} props.onView - Handler function for view action
+ */
 const ActionButtons = ({ client, onView }) => (
   <div className="action-buttons d-flex gap-2">
     <OverlayTrigger
@@ -105,7 +93,15 @@ const ActionButtons = ({ client, onView }) => (
   </div>
 );
 
-// Composant pour l'en-tête de colonne triable
+/**
+ * Component for sortable table column headers
+ * @param {Object} props - Component props
+ * @param {string} props.column - Column identifier for sorting
+ * @param {string} props.currentSort - Currently active sort column
+ * @param {string} props.currentDir - Current sort direction ('asc' | 'desc')
+ * @param {Function} props.onSort - Handler function for sort action
+ * @param {React.ReactNode} props.children - Header content
+ */
 const SortableHeader = ({
   column,
   currentSort,
@@ -135,7 +131,11 @@ const SortableHeader = ({
   </th>
 );
 
-// Composant pour le badge de segment
+/**
+ * Component for displaying client segment badge
+ * @param {Object} props - Component props
+ * @param {string} props.segment - Client segment value
+ */
 const SegmentBadge = ({ segment }) => {
   return (
     <Badge bg="light" text="dark" className="segment-badge">
@@ -144,38 +144,46 @@ const SegmentBadge = ({ segment }) => {
   );
 };
 
+/**
+ * Main AdminClients component for managing client data
+ * Provides functionality for viewing, searching, sorting, and paginating clients
+ */
 const AdminClients = () => {
-  // États principaux
-  const [search, setSearch] = useState("");
-  const [clients, setClients] = useState([]);
-  const [filtered, setFiltered] = useState([]);
-  const [page, setPage] = useState(1);
-  const [sortBy, setSortBy] = useState("id");
-  const [sortDir, setSortDir] = useState("asc");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  // Main state variables
+  const [search, setSearch] = useState(""); // Search query string
+  const [clients, setClients] = useState([]); // Original client data from API
+  const [filtered, setFiltered] = useState([]); // Filtered and sorted client data
+  const [page, setPage] = useState(1); // Current page number
+  const [sortBy, setSortBy] = useState("id"); // Current sort column
+  const [sortDir, setSortDir] = useState("asc"); // Current sort direction
+  const [loading, setLoading] = useState(true); // Loading state indicator
+  const [error, setError] = useState(""); // Error message state
 
-  // États pour le modal
-  const [selectedClient, setSelectedClient] = useState(null);
-  const [showDetails, setShowDetails] = useState(false);
+  // Modal state variables
+  const [selectedClient, setSelectedClient] = useState(null); // Currently selected client for details
+  const [showDetails, setShowDetails] = useState(false); // Details modal visibility
 
-  const navigate = useNavigate();
-
-  // Fonction pour récupérer les données
+  /**
+   * Fetch clients data from API
+   * Handles authentication, API calls, data mapping, and error handling
+   */
   const fetchClients = useCallback(async () => {
     setLoading(true);
     setError("");
 
     try {
+      // Check for authentication token
       const token = localStorage.getItem("token");
       if (!token) {
         throw new Error("Token d'authentification manquant");
       }
 
+      // Make API request with authentication header
       const response = await axios.get("/clients", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      // Map API response data and update state
       const data = response.data.data?.map(mapClientData) || [];
       setClients(data);
       toast.success("Clients chargés avec succès");
@@ -189,16 +197,19 @@ const AdminClients = () => {
     }
   }, []);
 
-  // Effet pour charger les données
+  // Effect to load data on component mount
   useEffect(() => {
     fetchClients();
   }, [fetchClients]);
 
-  // Effet pour filtrer et trier
+  /**
+   * Effect to handle filtering and sorting of client data
+   * Runs whenever search, sort parameters, or client data changes
+   */
   useEffect(() => {
     let data = [...clients];
 
-    // Filtrage
+    // Apply search filtering
     if (search.trim()) {
       const searchLower = search.toLowerCase();
       data = data.filter(
@@ -211,7 +222,7 @@ const AdminClients = () => {
       );
     }
 
-    // Tri
+    // Apply sorting
     data.sort((a, b) => {
       let comparison = 0;
 
@@ -235,33 +246,47 @@ const AdminClients = () => {
       return sortDir === "asc" ? comparison : -comparison;
     });
 
+    // Update filtered data and reset to first page
     setFiltered(data);
     setPage(1);
   }, [search, sortBy, sortDir, clients]);
 
-  // Pagination
+  // Calculate pagination data
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
 
-  // Gestionnaires d'événements
+  /**
+   * Handle column header click for sorting
+   * @param {string} column - Column identifier to sort by
+   */
   const handleSort = (column) => {
     if (sortBy === column) {
+      // Toggle sort direction if same column clicked
       setSortDir((dir) => (dir === "asc" ? "desc" : "asc"));
     } else {
+      // Set new sort column with ascending direction
       setSortBy(column);
       setSortDir("asc");
     }
   };
 
+  /**
+   * Handle view client details action
+   * @param {Object} client - Client data to view
+   */
   const handleViewClient = (client) => {
     setSelectedClient(client);
     setShowDetails(true);
   };
 
+  /**
+   * Clear search input and reset filtering
+   */
   const clearSearch = () => {
     setSearch("");
   };
 
+  // Loading state render
   if (loading) {
     return (
       <>
@@ -284,12 +309,13 @@ const AdminClients = () => {
     );
   }
 
+  // Main component render
   return (
     <>
       <AdminSidebar />
       <div className="admin-clients">
         <div className="container-fluid py-4">
-          {/* Header */}
+          {/* Page Header Section */}
           <div className="page-header mb-4">
             <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
               <div>
@@ -304,7 +330,7 @@ const AdminClients = () => {
             </div>
           </div>
 
-          {/* Error Alert */}
+          {/* Error Alert Display */}
           {error && (
             <Alert
               variant="danger"
@@ -316,27 +342,7 @@ const AdminClients = () => {
             </Alert>
           )}
 
-          {/* Stats Cards 
-          <Row className="mb-4 g-3">
-            <Col xs={6} lg={6}>
-              <StatsCard
-                title="Total Clients"
-                count={clients.length}
-                icon={FaUsers}
-                variant="primary"
-              />
-            </Col>
-            <Col xs={6} lg={6}>
-              <StatsCard
-                title="Résultats"
-                count={filtered.length}
-                icon={FaFilter}
-                variant="info"
-              />
-            </Col>
-          </Row>*/}
-
-          {/* Search Bar */}
+          {/* Search Bar Section */}
           <Card className="search-card mb-4 border-0 shadow-sm">
             <Card.Body>
               <InputGroup className="search-input-group">
@@ -362,11 +368,12 @@ const AdminClients = () => {
             </Card.Body>
           </Card>
 
-          {/* Table */}
+          {/* Main Data Table */}
           <Card className="table-card border-0 shadow-sm">
             <Card.Body className="p-0">
               <div className="table-responsive">
                 <Table hover className="clients-table mb-0">
+                  {/* Table Header with Sortable Columns */}
                   <thead className="table-header">
                     <tr>
                       <SortableHeader
@@ -407,6 +414,7 @@ const AdminClients = () => {
                     </tr>
                   </thead>
                   <tbody>
+                    {/* Empty State Display */}
                     {paginated.length === 0 ? (
                       <tr>
                         <td colSpan={7} className="text-center py-5">
@@ -422,9 +430,12 @@ const AdminClients = () => {
                         </td>
                       </tr>
                     ) : (
+                      /* Client Data Rows */
                       paginated.map((client) => (
                         <tr key={client.id} className="table-row">
+                          {/* Client ID */}
                           <td className="fw-bold text-primary">#{client.id}</td>
+                          {/* Client Info with Avatar */}
                           <td>
                             <div className="client-info">
                               <div className="client-avatar">
@@ -438,6 +449,7 @@ const AdminClients = () => {
                               </div>
                             </div>
                           </td>
+                          {/* Email with Icon */}
                           <td>
                             <div className="d-flex align-items-center">
                               <FaEnvelope
@@ -447,12 +459,14 @@ const AdminClients = () => {
                               {client.email}
                             </div>
                           </td>
+                          {/* Phone with Icon */}
                           <td>
                             <div className="d-flex align-items-center">
                               <FaPhone className="me-2 text-muted" size={14} />
                               {client.telephone}
                             </div>
                           </td>
+                          {/* Address with Icon and Truncation */}
                           <td>
                             <div className="d-flex align-items-center">
                               <FaMapMarkerAlt
@@ -467,9 +481,11 @@ const AdminClients = () => {
                               </span>
                             </div>
                           </td>
+                          {/* Segment Badge */}
                           <td>
                             <SegmentBadge segment={client.segment} />
                           </td>
+                          {/* Action Buttons */}
                           <td className="text-center">
                             <ActionButtons
                               client={client}
@@ -485,14 +501,16 @@ const AdminClients = () => {
             </Card.Body>
           </Card>
 
-          {/* Pagination */}
+          {/* Pagination Section */}
           {totalPages > 1 && (
             <div className="d-flex justify-content-between align-items-center mt-4">
+              {/* Pagination Info */}
               <div className="pagination-info text-muted">
                 Affichage de {(page - 1) * PAGE_SIZE + 1} à{" "}
                 {Math.min(page * PAGE_SIZE, filtered.length)} sur{" "}
                 {filtered.length} résultats
               </div>
+              {/* Pagination Controls */}
               <Pagination className="mb-0 custom-pagination">
                 <Pagination.First
                   onClick={() => setPage(1)}
@@ -529,7 +547,7 @@ const AdminClients = () => {
         </div>
       </div>
 
-      {/* Modal de détails */}
+      {/* Client Details Modal */}
       <Modal
         show={showDetails}
         onHide={() => setShowDetails(false)}
@@ -546,7 +564,7 @@ const AdminClients = () => {
         <Modal.Body className="details-modal-body">
           {selectedClient && (
             <>
-              {/* Client Header */}
+              {/* Client Header in Modal */}
               <div className="client-header">
                 <div className="client-avatar-large">
                   {getInitials(selectedClient.nom, selectedClient.prenom)}
@@ -557,7 +575,7 @@ const AdminClients = () => {
                 </p>
               </div>
 
-              {/* Informations personnelles */}
+              {/* Personal Information Section */}
               <div className="detail-section">
                 <h5 className="detail-section-title">
                   <FaIdCard className="me-2" />
@@ -615,7 +633,7 @@ const AdminClients = () => {
                 </div>
               </div>
 
-              {/* Informations de contact */}
+              {/* Contact Information Section */}
               <div className="detail-section">
                 <h5 className="detail-section-title">
                   <FaEnvelope className="me-2" />

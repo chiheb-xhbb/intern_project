@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
   Modal,
   Button,
@@ -18,10 +18,6 @@ import {
   FaUser,
   FaFileAlt,
   FaCalendarAlt,
-  FaEnvelope,
-  FaPhone,
-  FaBuilding,
-  FaGlobe,
   FaTimes,
   FaCloudUploadAlt,
   FaFilePdf,
@@ -42,22 +38,15 @@ import "./CreerReclamation.css";
  * Options de types de réclamations disponibles
  */
 const TYPE_OPTIONS = [
-  { value: "Carte bloquée", label: "Carte bloquée"},
-  { value: "Erreur de virement", label: "Erreur de virement"},
-  { value: "Retard crédit", label: "Retard crédit"},
-  { value: "Chèque rejeté", label: "Chèque rejeté"},
-  { value: "Autre", label: "Autre"},
+  { value: "Carte bloquée", label: "Carte bloquée" },
+  { value: "Erreur de virement", label: "Erreur de virement" },
+  { value: "Retard crédit", label: "Retard crédit" },
+  { value: "Chèque rejeté", label: "Chèque rejeté" },
+  { value: "Autre", label: "Autre" },
 ];
 
-/**
- * Options de canaux de communication
- */
-const CANAL_OPTIONS = [
-  { value: "email", label: "Email", icon: FaEnvelope },
-  { value: "téléphone", label: "Téléphone", icon: FaPhone },
-  { value: "agence", label: "En personne", icon: FaBuilding },
-  { value: "application_web", label: "Application web", icon: FaGlobe },
-];
+// Note: Le canal de communication est fixé à "application_web"
+// pour toutes les réclamations créées via cette interface
 
 /**
  * Contraintes pour l'upload de fichiers
@@ -163,26 +152,14 @@ const CreerReclamation = ({ show, onHide, clientId: propClientId }) => {
   const navigate = useNavigate();
 
   // =============================================
-  // EFFETS ET CHARGEMENT INITIAL
-  // =============================================
-
-  /**
-   * Charge les comptes du client à l'ouverture du modal
-   */
-  useEffect(() => {
-    if (show !== false) {
-      loadClientComptes();
-    }
-  }, [show]);
-
-  // =============================================
   // FONCTIONS DE CHARGEMENT DES DONNÉES
   // =============================================
 
   /**
    * Charge la liste des comptes bancaires du client connecté
+   * Fonction mémorisée avec useCallback pour éviter les re-renders inutiles
    */
-  const loadClientComptes = async () => {
+  const loadClientComptes = useCallback(async () => {
     setLoadingComptes(true);
 
     try {
@@ -266,7 +243,21 @@ const CreerReclamation = ({ show, onHide, clientId: propClientId }) => {
     } finally {
       setLoadingComptes(false);
     }
-  };
+  }, [propClientId]); // Dépendance sur propClientId
+
+  // =============================================
+  // EFFETS ET CHARGEMENT INITIAL
+  // =============================================
+
+  /**
+   * Charge les comptes du client à l'ouverture du modal
+   * useEffect avec dépendances correctes pour éviter les warnings
+   */
+  useEffect(() => {
+    if (show !== false) {
+      loadClientComptes();
+    }
+  }, [show, loadClientComptes]); // Dépendances: show et loadClientComptes
 
   // =============================================
   // GESTIONNAIRES D'ÉVÉNEMENTS
@@ -317,7 +308,9 @@ const CreerReclamation = ({ show, onHide, clientId: propClientId }) => {
     setFiles((prevFiles) => [...prevFiles, ...newFiles]);
 
     // Réinitialisation du champ fichier
-    fileInputRef.current.value = "";
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   /**
@@ -546,7 +539,7 @@ const CreerReclamation = ({ show, onHide, clientId: propClientId }) => {
                           <option value="">Sélectionner un type</option>
                           {TYPE_OPTIONS.map((type) => (
                             <option key={type.value} value={type.value}>
-                               {type.label}
+                              {type.label}
                             </option>
                           ))}
                         </Form.Select>
