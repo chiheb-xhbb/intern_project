@@ -90,7 +90,7 @@
 }
 
 .user-dropdown .dropdown-toggle::after {
-  margin-left: 0.5rem;
+  margin-left: 50%;/*for the arrow icon*/
   transition: var(--transition);
 }
 

@@ -34,7 +34,6 @@ import {
   FaCalendarAlt,
   FaTag,
   FaSignOutAlt,
-  FaUniversity,
   FaFilter,
   FaSortAmountDown,
   FaSortAmountUp,
@@ -58,7 +57,13 @@ import axios from "../api/axios";
 import { toast } from "react-toastify";
 import "./ClientInterface.css";
 
-// Status configuration with colors and icons
+// ========================================
+// CONSTANTES ET CONFIGURATION
+// ========================================
+
+/**
+ * Configuration des statuts avec leurs couleurs et icônes associées
+ */
 const STATUS_CONFIG = {
   "en attente": {
     label: "En attente",
@@ -87,9 +92,20 @@ const STATUS_CONFIG = {
   },
 };
 
+/**
+ * Nombre d'éléments par page pour la pagination
+ */
 const PAGE_SIZE = 6;
 
-// Helper function to get full name
+// ========================================
+// FONCTIONS UTILITAIRES
+// ========================================
+
+/**
+ * Récupère le nom complet d'un client
+ * @param {Object} clientData - Les données du client
+ * @returns {string} Le nom complet ou "Client" par défaut
+ */
 const getFullName = (clientData) => {
   if (!clientData) return "Client";
   const nom = clientData.nom || "";
@@ -97,14 +113,23 @@ const getFullName = (clientData) => {
   return `${prenom} ${nom}`.trim() || "Client";
 };
 
-// Helper function to get initials (like in AdminClients)
+/**
+ * Génère les initiales d'un client
+ * @param {string} nom - Le nom de famille
+ * @param {string} prenom - Le prénom
+ * @returns {string} Les initiales en majuscules
+ */
 const getInitials = (nom, prenom) => {
   const n = nom?.charAt(0) || "";
   const p = prenom?.charAt(0) || "";
   return `${n}${p}`.toUpperCase() || "?";
 };
 
-// Helper function to map API data
+/**
+ * Transforme les données de l'API en format utilisable
+ * @param {Object} apiData - Données brutes de l'API
+ * @returns {Object} Données formatées pour l'affichage
+ */
 const mapReclamationData = (apiData) => ({
   id: apiData.id,
   type: apiData.type_reclamation,
@@ -115,20 +140,39 @@ const mapReclamationData = (apiData) => ({
   pieces_jointes: apiData.pieces_jointes || [],
 });
 
-// Helper function to format date for display
+/**
+ * Formate une date pour l'affichage en français
+ * @param {string} dateString - Date au format ISO
+ * @returns {string} Date formatée ou message par défaut
+ */
 const formatDate = (dateString) => {
   if (!dateString) return "Date non disponible";
   const date = new Date(dateString);
   return date.toLocaleDateString("fr-FR");
 };
 
-// Helper function to parse date for comparison
+/**
+ * Parse une date pour les comparaisons
+ * @param {string} dateString - Date au format string
+ * @returns {Date} Objet Date ou date epoch si invalide
+ */
 const parseDate = (dateString) => {
   if (!dateString) return new Date(0);
   return new Date(dateString);
 };
 
-// Client Navbar Component - Fixed version without avatar
+// ========================================
+// COMPOSANT : BARRE DE NAVIGATION CLIENT
+// ========================================
+
+/**
+ * Composant de navigation pour l'interface client
+ * @param {Object} props - Les propriétés du composant
+ * @param {Object} props.clientData - Données du client connecté
+ * @param {Function} props.onLogout - Fonction de déconnexion
+ * @param {Function} props.onViewProfile - Fonction pour voir le profil
+ * @param {Function} props.onChangePassword - Fonction pour changer le mot de passe
+ */
 const ClientNavbar = ({
   clientData,
   onLogout,
@@ -140,18 +184,22 @@ const ClientNavbar = ({
   return (
     <Navbar className="client-navbar" expand="lg">
       <Container fluid>
+        {/* Logo de l'application */}
         <Navbar.Brand className="navbar-brand-custom">
           <img src="/IMAGES/logo.png" alt="Logo" className="brand-logo" />
         </Navbar.Brand>
-        {/* Center - Page Title */}
+
+        {/* Titre centré - visible uniquement sur desktop */}
         <div className="navbar-center-title d-none d-lg-block">
           <h4 className="page-title-navbar">BH Réclamations</h4>
         </div>
-        {/* responsive */}
+
+        {/* Bouton responsive pour mobile */}
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
 
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="ms-auto">
+            {/* Menu déroulant utilisateur */}
             <NavDropdown
               title={
                 <span className="user-dropdown-title d-flex align-items-center">
@@ -163,6 +211,7 @@ const ClientNavbar = ({
               align="end"
               className="user-dropdown"
             >
+              {/* En-tête du dropdown avec infos utilisateur */}
               <div className="dropdown-header">
                 <div className="user-info-header">
                   <FaUserCircle size={32} className="text-primary me-2" />
@@ -174,7 +223,10 @@ const ClientNavbar = ({
                   </div>
                 </div>
               </div>
+
               <NavDropdown.Divider />
+
+              {/* Options du menu */}
               <NavDropdown.Item
                 onClick={onViewProfile}
                 className="profile-item"
@@ -182,6 +234,7 @@ const ClientNavbar = ({
                 <FaUserCircle className="dropdown-item-icon" />
                 Voir le profil
               </NavDropdown.Item>
+
               <NavDropdown.Item
                 onClick={onChangePassword}
                 className="password-item"
@@ -189,7 +242,10 @@ const ClientNavbar = ({
                 <FaKey className="dropdown-item-icon" />
                 Changer le mot de passe
               </NavDropdown.Item>
+
               <NavDropdown.Divider />
+
+              {/* Déconnexion */}
               <NavDropdown.Item onClick={onLogout} className="logout-item">
                 <FaSignOutAlt className="dropdown-item-icon" />
                 Déconnexion
@@ -202,7 +258,18 @@ const ClientNavbar = ({
   );
 };
 
-// Profile Modal Component
+// ========================================
+// COMPOSANT : MODAL DE PROFIL
+// ========================================
+
+/**
+ * Modal d'affichage du profil utilisateur
+ * @param {Object} props - Propriétés du composant
+ * @param {boolean} props.show - État d'affichage de la modal
+ * @param {Function} props.onHide - Fonction de fermeture
+ * @param {Object} props.clientData - Données du client
+ * @param {boolean} props.loading - État de chargement
+ */
 const ProfileModal = ({ show, onHide, clientData, loading }) => (
   <Modal
     show={show}
@@ -217,8 +284,10 @@ const ProfileModal = ({ show, onHide, clientData, loading }) => (
         Mon Profil
       </Modal.Title>
     </Modal.Header>
+
     <Modal.Body className="profile-modal-body">
       {loading ? (
+        // État de chargement
         <div className="loading-container-small">
           <Spinner animation="border" variant="primary" size="sm" />
           <span className="loading-text-small">
@@ -227,12 +296,8 @@ const ProfileModal = ({ show, onHide, clientData, loading }) => (
         </div>
       ) : (
         <>
-          {/* Client Header */}
+          {/* En-tête client */}
           <div className="client-header">
-            {/* AVATAR - Uncomment if you want to use avatar 
-            <div className="client-avatar-large">
-              {getInitials(clientData?.nom, clientData?.prenom)}
-            </div> */}
             <h3 className="client-name">
               {clientData?.nom && clientData?.prenom
                 ? `${clientData.prenom} ${clientData.nom}`
@@ -243,7 +308,7 @@ const ProfileModal = ({ show, onHide, clientData, loading }) => (
             </p>
           </div>
 
-          {/* Informations personnelles */}
+          {/* Section : Informations personnelles */}
           <div className="detail-section">
             <h5 className="detail-section-title">
               <FaIdCard className="me-2" />
@@ -259,6 +324,7 @@ const ProfileModal = ({ show, onHide, clientData, loading }) => (
                   {clientData?.nom || "Non renseigné"}
                 </div>
               </div>
+
               <div className="detail-item">
                 <label className="detail-label">
                   <FaUser className="me-2" />
@@ -268,6 +334,7 @@ const ProfileModal = ({ show, onHide, clientData, loading }) => (
                   {clientData?.prenom || "Non renseigné"}
                 </div>
               </div>
+
               <div className="detail-item">
                 <label className="detail-label">
                   <FaBirthdayCake className="me-2" />
@@ -279,6 +346,7 @@ const ProfileModal = ({ show, onHide, clientData, loading }) => (
                     : "Non renseigné"}
                 </div>
               </div>
+
               <div className="detail-item">
                 <label className="detail-label">
                   <FaMapMarkerAlt className="me-2" />
@@ -291,7 +359,7 @@ const ProfileModal = ({ show, onHide, clientData, loading }) => (
             </div>
           </div>
 
-          {/* Informations de contact */}
+          {/* Section : Informations de contact */}
           <div className="detail-section">
             <h5 className="detail-section-title">
               <FaEnvelope className="me-2" />
@@ -307,6 +375,7 @@ const ProfileModal = ({ show, onHide, clientData, loading }) => (
                   {clientData?.email || "Non renseigné"}
                 </div>
               </div>
+
               <div className="detail-item">
                 <label className="detail-label">
                   <FaPhone className="me-2" />
@@ -319,7 +388,7 @@ const ProfileModal = ({ show, onHide, clientData, loading }) => (
             </div>
           </div>
 
-          {/* Informations du compte */}
+          {/* Section : Informations du compte */}
           <div className="detail-section">
             <h5 className="detail-section-title">
               <FaCalendarAlt className="me-2" />
@@ -337,6 +406,7 @@ const ProfileModal = ({ show, onHide, clientData, loading }) => (
                     : "Non disponible"}
                 </div>
               </div>
+
               <div className="detail-item">
                 <label className="detail-label">
                   <FaTags className="me-2" />
@@ -348,7 +418,7 @@ const ProfileModal = ({ show, onHide, clientData, loading }) => (
                   </Badge>
                 </div>
               </div>
-              
+
               <div className="detail-item">
                 <label className="detail-label">
                   <FaIdCard className="me-2" />
@@ -363,6 +433,7 @@ const ProfileModal = ({ show, onHide, clientData, loading }) => (
         </>
       )}
     </Modal.Body>
+
     <Modal.Footer className="profile-modal-footer">
       <Button
         variant="outline-primary"
@@ -375,43 +446,68 @@ const ProfileModal = ({ show, onHide, clientData, loading }) => (
   </Modal>
 );
 
-// Change Password Modal Component - Enhanced with professional error display
+// ========================================
+// COMPOSANT : MODAL DE CHANGEMENT DE MOT DE PASSE
+// ========================================
+
+/**
+ * Modal pour changer le mot de passe utilisateur
+ * @param {Object} props - Propriétés du composant
+ * @param {boolean} props.show - État d'affichage de la modal
+ * @param {Function} props.onHide - Fonction de fermeture
+ */
 const ChangePasswordModal = ({ show, onHide }) => {
+  // États locaux pour la gestion des mots de passe
   const [passwords, setPasswords] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
+
+  // États pour la visibilité des mots de passe
   const [showPasswords, setShowPasswords] = useState({
     current: false,
     new: false,
     confirm: false,
   });
+
+  // États pour la gestion des erreurs et du chargement
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [showErrorAlert, setShowErrorAlert] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
+  /**
+   * Gère les changements dans les champs mot de passe
+   * @param {string} field - Le champ modifié
+   * @param {string} value - La nouvelle valeur
+   */
   const handlePasswordChange = (field, value) => {
     setPasswords((prev) => ({
       ...prev,
       [field]: value,
     }));
-    // Clear errors when user starts typing
+
+    // Nettoie les erreurs lors de la saisie
     if (errors[field]) {
       setErrors((prev) => ({
         ...prev,
         [field]: "",
       }));
     }
-    // Hide error alert when user starts typing
+
+    // Masque l'alerte d'erreur lors de la saisie
     if (showErrorAlert) {
       setShowErrorAlert(false);
       setErrorMessage("");
     }
   };
 
+  /**
+   * Bascule la visibilité d'un champ mot de passe
+   * @param {string} field - Le champ à basculer
+   */
   const togglePasswordVisibility = (field) => {
     setShowPasswords((prev) => ({
       ...prev,
@@ -419,13 +515,19 @@ const ChangePasswordModal = ({ show, onHide }) => {
     }));
   };
 
+  /**
+   * Valide le formulaire de changement de mot de passe
+   * @returns {boolean} True si le formulaire est valide
+   */
   const validateForm = () => {
     const newErrors = {};
 
+    // Validation du mot de passe actuel
     if (!passwords.currentPassword) {
       newErrors.currentPassword = "Le mot de passe actuel est requis";
     }
 
+    // Validation du nouveau mot de passe
     if (!passwords.newPassword) {
       newErrors.newPassword = "Le nouveau mot de passe est requis";
     } else if (passwords.newPassword.length < 8) {
@@ -433,12 +535,14 @@ const ChangePasswordModal = ({ show, onHide }) => {
         "Le mot de passe doit contenir au moins 8 caractères";
     }
 
+    // Validation de la confirmation
     if (!passwords.confirmPassword) {
       newErrors.confirmPassword = "La confirmation du mot de passe est requise";
     } else if (passwords.newPassword !== passwords.confirmPassword) {
       newErrors.confirmPassword = "Les mots de passe ne correspondent pas";
     }
 
+    // Vérification que le nouveau mot de passe est différent
     if (passwords.currentPassword === passwords.newPassword) {
       newErrors.newPassword =
         "Le nouveau mot de passe doit être différent de l'ancien";
@@ -448,6 +552,10 @@ const ChangePasswordModal = ({ show, onHide }) => {
     return Object.keys(newErrors).length === 0;
   };
 
+  /**
+   * Soumet le formulaire de changement de mot de passe
+   * @param {Event} e - Événement de soumission
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -459,7 +567,7 @@ const ChangePasswordModal = ({ show, onHide }) => {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.post(
+      await axios.post(
         "/change-password",
         {
           current_password: passwords.currentPassword,
@@ -471,13 +579,11 @@ const ChangePasswordModal = ({ show, onHide }) => {
         }
       );
 
-      // Show success alert instead of toast
+      // Affiche le succès
       setShowSuccessAlert(true);
-
-      // Also show toast for immediate feedback
       toast.success("Mot de passe modifié avec succès");
 
-      // Auto-hide the modal after 3 seconds to let user see the success message
+      // Ferme automatiquement la modal après 3 secondes
       setTimeout(() => {
         handleClose();
       }, 3000);
@@ -487,8 +593,8 @@ const ChangePasswordModal = ({ show, onHide }) => {
       let errorMsg =
         "Une erreur s'est produite lors du changement de mot de passe";
 
+      // Gestion des erreurs spécifiques
       if (err.response?.status === 400 || err.response?.status === 422) {
-        // Check for specific error messages from the API
         if (err.response.data?.message) {
           errorMsg = err.response.data.message;
         } else if (err.response.data?.errors?.current_password) {
@@ -510,17 +616,17 @@ const ChangePasswordModal = ({ show, onHide }) => {
         errorMsg = "Erreur serveur. Veuillez réessayer plus tard.";
       }
 
-      // Show professional error alert
       setErrorMessage(errorMsg);
       setShowErrorAlert(true);
-
-      // Also show toast for consistency
       toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
   };
 
+  /**
+   * Ferme la modal et remet à zéro tous les états
+   */
   const handleClose = () => {
     setPasswords({
       currentPassword: "",
@@ -554,8 +660,9 @@ const ChangePasswordModal = ({ show, onHide }) => {
           Changer le mot de passe
         </Modal.Title>
       </Modal.Header>
+
       <Modal.Body className="password-modal-body">
-        {/* Error Alert */}
+        {/* Alerte d'erreur */}
         {showErrorAlert && (
           <Alert
             variant="danger"
@@ -590,7 +697,7 @@ const ChangePasswordModal = ({ show, onHide }) => {
           </Alert>
         )}
 
-        {/* Success Alert */}
+        {/* Alerte de succès */}
         {showSuccessAlert && (
           <Alert
             variant="success"
@@ -621,8 +728,10 @@ const ChangePasswordModal = ({ show, onHide }) => {
           </Alert>
         )}
 
+        {/* Formulaire de changement de mot de passe */}
         <Form onSubmit={handleSubmit}>
           <div className="password-field-group">
+            {/* Mot de passe actuel */}
             <Form.Group className="mb-3">
               <Form.Label className="password-label">
                 <FaLock className="password-icon" />
@@ -654,6 +763,7 @@ const ChangePasswordModal = ({ show, onHide }) => {
               </Form.Control.Feedback>
             </Form.Group>
 
+            {/* Nouveau mot de passe */}
             <Form.Group className="mb-3">
               <Form.Label className="password-label">
                 <FaKey className="password-icon" />
@@ -688,6 +798,7 @@ const ChangePasswordModal = ({ show, onHide }) => {
               </Form.Text>
             </Form.Group>
 
+            {/* Confirmation du nouveau mot de passe */}
             <Form.Group className="mb-4">
               <Form.Label className="password-label">
                 <FaKey className="password-icon" />
@@ -721,6 +832,7 @@ const ChangePasswordModal = ({ show, onHide }) => {
           </div>
         </Form>
       </Modal.Body>
+
       <Modal.Footer className="password-modal-footer">
         <Button
           variant="outline-secondary"
@@ -754,7 +866,22 @@ const ChangePasswordModal = ({ show, onHide }) => {
   );
 };
 
-// Filters Component
+// ========================================
+// COMPOSANT : SECTION DES FILTRES
+// ========================================
+
+/**
+ * Section de filtres et de tri pour les réclamations
+ * @param {Object} props - Propriétés du composant
+ * @param {Object} props.filters - Filtres actuels
+ * @param {Function} props.onFiltersChange - Fonction de modification des filtres
+ * @param {Function} props.onClearFilters - Fonction de remise à zéro des filtres
+ * @param {number} props.filteredCount - Nombre d'éléments filtrés
+ * @param {number} props.totalCount - Nombre total d'éléments
+ * @param {boolean} props.showFilters - État d'affichage des filtres
+ * @param {Function} props.onToggleFilters - Fonction de basculement des filtres
+ * @param {Array} props.availableTypes - Types de réclamations disponibles
+ */
 const FiltersSection = ({
   filters,
   onFiltersChange,
@@ -765,6 +892,10 @@ const FiltersSection = ({
   onToggleFilters,
   availableTypes,
 }) => {
+  /**
+   * Gère le changement de statut dans les filtres
+   * @param {string} status - Le statut à ajouter/retirer
+   */
   const handleStatusChange = (status) => {
     const newStatuses = filters.statuses.includes(status)
       ? filters.statuses.filter((s) => s !== status)
@@ -773,6 +904,10 @@ const FiltersSection = ({
     onFiltersChange({ ...filters, statuses: newStatuses });
   };
 
+  /**
+   * Gère le changement de type dans les filtres
+   * @param {string} type - Le type à ajouter/retirer
+   */
   const handleTypeChange = (type) => {
     const newTypes = filters.types.includes(type)
       ? filters.types.filter((t) => t !== type)
@@ -781,10 +916,16 @@ const FiltersSection = ({
     onFiltersChange({ ...filters, types: newTypes });
   };
 
+  /**
+   * Gère le changement de tri
+   * @param {string} sortBy - Critère de tri
+   * @param {string} sortOrder - Ordre de tri (asc/desc)
+   */
   const handleSortChange = (sortBy, sortOrder) => {
     onFiltersChange({ ...filters, sortBy, sortOrder });
   };
 
+  // Vérifie s'il y a des filtres actifs
   const hasActiveFilters =
     filters.statuses.length > 0 ||
     filters.types.length > 0 ||
@@ -796,6 +937,7 @@ const FiltersSection = ({
   return (
     <Card className="filters-card">
       <Card.Body className="filters-body">
+        {/* En-tête des filtres */}
         <div className="filters-header">
           <Button
             variant="link"
@@ -812,6 +954,8 @@ const FiltersSection = ({
               )}
             </h6>
           </Button>
+
+          {/* Bouton pour effacer les filtres */}
           {hasActiveFilters && (
             <Button
               variant="outline-secondary"
@@ -825,10 +969,11 @@ const FiltersSection = ({
           )}
         </div>
 
+        {/* Contenu collapsible des filtres */}
         <Collapse in={showFilters}>
           <div>
             <Row className="filters-content g-3">
-              {/* Status Filter */}
+              {/* Filtre par statut */}
               <Col lg={3} md={6}>
                 <Form.Label className="filter-label">Statut</Form.Label>
                 <div className="status-checkboxes">
@@ -846,7 +991,7 @@ const FiltersSection = ({
                 </div>
               </Col>
 
-              {/* Type Filter */}
+              {/* Filtre par type de réclamation */}
               <Col lg={3} md={6}>
                 <Form.Label className="filter-label">
                   Type de réclamation
@@ -869,7 +1014,7 @@ const FiltersSection = ({
                 </div>
               </Col>
 
-              {/* Date Range Filter */}
+              {/* Filtre par période */}
               <Col lg={3} md={6}>
                 <Form.Label className="filter-label">Période</Form.Label>
                 <div className="date-inputs">
@@ -896,7 +1041,7 @@ const FiltersSection = ({
                 </div>
               </Col>
 
-              {/* Sort Options */}
+              {/* Options de tri */}
               <Col lg={3} md={6}>
                 <Form.Label className="filter-label">Trier par</Form.Label>
                 <div className="sort-controls">
@@ -956,7 +1101,7 @@ const FiltersSection = ({
               </Col>
             </Row>
 
-            {/* Results Summary */}
+            {/* Résumé des résultats */}
             <div className="filters-summary">
               <small className="text-muted">
                 <FaSearch className="summary-icon" />
@@ -976,7 +1121,16 @@ const FiltersSection = ({
   );
 };
 
-// Reclamation Card Component
+// ========================================
+// COMPOSANT : CARTE DE RÉCLAMATION
+// ========================================
+
+/**
+ * Composant d'affichage d'une carte de réclamation
+ * @param {Object} props - Propriétés du composant
+ * @param {Object} props.reclamation - Données de la réclamation
+ * @param {Function} props.onViewDetails - Fonction pour voir les détails
+ */
 const ReclamationCard = ({ reclamation, onViewDetails }) => {
   const config = STATUS_CONFIG[reclamation.statut];
   const IconComponent = config?.icon || FaClock;
@@ -984,6 +1138,7 @@ const ReclamationCard = ({ reclamation, onViewDetails }) => {
   return (
     <Card className="reclamation-card">
       <Card.Body className="reclamation-card-body">
+        {/* En-tête de la carte */}
         <div className="card-header-section">
           <div className="card-id-section">
             <h6 className="card-id">Réclamation #{reclamation.id}</h6>
@@ -997,6 +1152,7 @@ const ReclamationCard = ({ reclamation, onViewDetails }) => {
           </Badge>
         </div>
 
+        {/* Métadonnées de la réclamation */}
         <div className="card-meta-section">
           <small className="meta-item">
             <FaCalendarAlt className="meta-icon" />
@@ -1008,10 +1164,12 @@ const ReclamationCard = ({ reclamation, onViewDetails }) => {
           </small>
         </div>
 
+        {/* Description tronquée */}
         <p className="card-description">
           {reclamation.description || "Aucune description fournie"}
         </p>
 
+        {/* Pied de carte avec actions */}
         <div className="card-footer-section">
           <small className="attachments-count">
             {reclamation.pieces_jointes?.length || 0} pièce(s) jointe(s)
@@ -1031,67 +1189,93 @@ const ReclamationCard = ({ reclamation, onViewDetails }) => {
   );
 };
 
+// ========================================
+// COMPOSANT PRINCIPAL : INTERFACE CLIENT
+// ========================================
+
+/**
+ * Composant principal de l'interface client pour la gestion des réclamations
+ */
 const ClientInterface = () => {
-  // Main states
-  const [reclamations, setReclamations] = useState([]);
-  const [filteredReclamations, setFilteredReclamations] = useState([]);
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [clientData, setClientData] = useState(null);
+  // ========================================
+  // ÉTATS PRINCIPAUX
+  // ========================================
 
-  // Filter states
+  const [reclamations, setReclamations] = useState([]); // Liste des réclamations
+  const [filteredReclamations, setFilteredReclamations] = useState([]); // Réclamations filtrées
+  const [page, setPage] = useState(1); // Page courante pour la pagination
+  const [loading, setLoading] = useState(true); // État de chargement
+  const [error, setError] = useState(""); // Message d'erreur
+  const [clientData, setClientData] = useState(null); // Données du client connecté
+
+  // ========================================
+  // ÉTATS DES FILTRES
+  // ========================================
+
   const [filters, setFilters] = useState({
-    statuses: [],
-    types: [],
-    dateFrom: "",
-    dateTo: "",
-    sortBy: "date",
-    sortOrder: "desc",
+    statuses: [], // Statuts sélectionnés
+    types: [], // Types sélectionnés
+    dateFrom: "", // Date de début
+    dateTo: "", // Date de fin
+    sortBy: "date", // Critère de tri
+    sortOrder: "desc", // Ordre de tri
   });
-  const [showFilters, setShowFilters] = useState(false);
-  const [availableTypes, setAvailableTypes] = useState([]);
+  const [showFilters, setShowFilters] = useState(false); // Affichage des filtres
+  const [availableTypes, setAvailableTypes] = useState([]); // Types disponibles
 
-  // Modal states
-  const [selectedReclamation, setSelectedReclamation] = useState(null);
-  const [showDetails, setShowDetails] = useState(false);
-  const [showProfile, setShowProfile] = useState(false);
-  const [showChangePassword, setShowChangePassword] = useState(false);
-  const [profileLoading, setProfileLoading] = useState(false);
+  // ========================================
+  // ÉTATS DES MODALS
+  // ========================================
+
+  const [selectedReclamation, setSelectedReclamation] = useState(null); // Réclamation sélectionnée
+  const [showDetails, setShowDetails] = useState(false); // Affichage détails
+  const [showProfile, setShowProfile] = useState(false); // Affichage profil
+  const [showChangePassword, setShowChangePassword] = useState(false); // Affichage changement mot de passe
+  const [profileLoading, setProfileLoading] = useState(false); // Chargement profil
 
   const navigate = useNavigate();
 
-  // Apply filters and sorting
+  // ========================================
+  // FONCTIONS DE FILTRAGE ET TRI
+  // ========================================
+
+  /**
+   * Applique les filtres et le tri sur les données
+   * @param {Array} data - Données à filtrer
+   * @param {Object} currentFilters - Filtres à appliquer
+   * @returns {Array} Données filtrées et triées
+   */
   const applyFilters = useCallback((data, currentFilters) => {
     let filtered = [...data];
 
-    // Status filter
+    // Filtre par statut
     if (currentFilters.statuses.length > 0) {
       filtered = filtered.filter((rec) =>
         currentFilters.statuses.includes(rec.statut)
       );
     }
 
-    // Type filter
+    // Filtre par type
     if (currentFilters.types.length > 0) {
       filtered = filtered.filter((rec) =>
         currentFilters.types.includes(rec.type)
       );
     }
 
-    // Date range filter
+    // Filtre par date de début
     if (currentFilters.dateFrom) {
       const fromDate = new Date(currentFilters.dateFrom);
       filtered = filtered.filter((rec) => parseDate(rec.date) >= fromDate);
     }
 
+    // Filtre par date de fin
     if (currentFilters.dateTo) {
       const toDate = new Date(currentFilters.dateTo);
-      toDate.setHours(23, 59, 59, 999); // Include the entire day
+      toDate.setHours(23, 59, 59, 999); // Inclut toute la journée
       filtered = filtered.filter((rec) => parseDate(rec.date) <= toDate);
     }
 
-    // Sort
+    // Application du tri
     filtered.sort((a, b) => {
       let comparison = 0;
 
@@ -1109,20 +1293,32 @@ const ClientInterface = () => {
     return filtered;
   }, []);
 
-  // Update filtered reclamations when filters or data change
+  // ========================================
+  // EFFETS DE MISE À JOUR
+  // ========================================
+
+  /**
+   * Met à jour les réclamations filtrées lors du changement des filtres ou données
+   */
   useEffect(() => {
     const filtered = applyFilters(reclamations, filters);
     setFilteredReclamations(filtered);
-    setPage(1); // Reset to first page when filtering
+    setPage(1); // Remet à la première page lors du filtrage
 
-    // Extract unique types from reclamations
+    // Extrait les types uniques des réclamations
     const uniqueTypes = [
       ...new Set(reclamations.map((rec) => rec.type)),
     ].sort();
     setAvailableTypes(uniqueTypes);
   }, [reclamations, filters, applyFilters]);
 
-  // Fetch client data
+  // ========================================
+  // FONCTIONS DE RÉCUPÉRATION DES DONNÉES
+  // ========================================
+
+  /**
+   * Récupère les données du client connecté
+   */
   const fetchClientData = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
@@ -1134,7 +1330,7 @@ const ClientInterface = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // API returns data under response.data.user
+      // L'API retourne les données sous response.data.user
       const userData = response.data.user;
       setClientData(userData);
     } catch (err) {
@@ -1143,7 +1339,9 @@ const ClientInterface = () => {
     }
   }, []);
 
-  // Fetch reclamations
+  /**
+   * Récupère les réclamations du client
+   */
   const fetchReclamations = useCallback(async () => {
     setLoading(true);
     setError("");
@@ -1174,43 +1372,72 @@ const ClientInterface = () => {
     }
   }, []);
 
-  // Load data on component mount
+  /**
+   * Charge les données au montage du composant
+   */
   useEffect(() => {
     fetchClientData();
     fetchReclamations();
   }, [fetchClientData, fetchReclamations]);
 
-  // Pagination
+  // ========================================
+  // LOGIQUE DE PAGINATION
+  // ========================================
+
+  // Calcul des éléments paginés
   const paginated = filteredReclamations.slice(
     (page - 1) * PAGE_SIZE,
     page * PAGE_SIZE
   );
   const totalPages = Math.ceil(filteredReclamations.length / PAGE_SIZE);
 
-  // Event handlers
+  // ========================================
+  // GESTIONNAIRES D'ÉVÉNEMENTS
+  // ========================================
+
+  /**
+   * Ouvre la modal de détails pour une réclamation
+   * @param {Object} reclamation - Réclamation sélectionnée
+   */
   const handleViewDetails = (reclamation) => {
     setSelectedReclamation(reclamation);
     setShowDetails(true);
   };
 
+  /**
+   * Gère la déconnexion de l'utilisateur
+   */
   const handleLogout = () => {
     localStorage.removeItem("token");
     toast.success("Déconnexion réussie");
     navigate("/login");
   };
 
+  /**
+   * Ouvre la modal de profil
+   */
   const handleViewProfile = () => {
     setShowProfile(true);
   };
 
+  /**
+   * Ouvre la modal de changement de mot de passe
+   */
   const handleChangePassword = () => {
     setShowChangePassword(true);
   };
 
+  /**
+   * Met à jour les filtres
+   * @param {Object} newFilters - Nouveaux filtres
+   */
   const handleFiltersChange = (newFilters) => {
     setFilters(newFilters);
   };
 
+  /**
+   * Remet à zéro tous les filtres
+   */
   const handleClearFilters = () => {
     setFilters({
       statuses: [],
@@ -1221,6 +1448,10 @@ const ClientInterface = () => {
       sortOrder: "desc",
     });
   };
+
+  // ========================================
+  // RENDU CONDITIONNEL : ÉTAT DE CHARGEMENT
+  // ========================================
 
   if (loading) {
     return (
@@ -1247,8 +1478,13 @@ const ClientInterface = () => {
     );
   }
 
+  // ========================================
+  // RENDU PRINCIPAL
+  // ========================================
+
   return (
     <>
+      {/* Barre de navigation */}
       <ClientNavbar
         clientData={clientData}
         onLogout={handleLogout}
@@ -1258,7 +1494,7 @@ const ClientInterface = () => {
 
       <div className="client-interface">
         <Container className="py-4">
-          {/* Header */}
+          {/* En-tête de la page */}
           <div className="page-header-client">
             <div className="header-content">
               <div className="header-text">
@@ -1281,7 +1517,7 @@ const ClientInterface = () => {
             </div>
           </div>
 
-          {/* Error Alert */}
+          {/* Alerte d'erreur */}
           {error && (
             <Alert
               variant="danger"
@@ -1293,7 +1529,7 @@ const ClientInterface = () => {
             </Alert>
           )}
 
-          {/* Filters Section */}
+          {/* Section des filtres */}
           {reclamations.length > 0 && (
             <FiltersSection
               filters={filters}
@@ -1307,8 +1543,33 @@ const ClientInterface = () => {
             />
           )}
 
-          {/* Reclamations List */}
+          {/* Liste des réclamations */}
           {reclamations.length === 0 ? (
+            // État vide - aucune réclamation
+            <Card className="empty-state-card">
+              <Card.Body className="empty-state-body">
+                <div className="empty-state-content">
+                  <FaSearch className="empty-state-icon" />
+                  <h5 className="empty-state-title">
+                    Aucune réclamation trouvée
+                  </h5>
+                  <p className="empty-state-text">
+                    Vous n'avez encore créé aucune réclamation. Commencez par
+                    créer votre première réclamation.
+                  </p>
+                  <Button
+                    variant="primary"
+                    className="empty-state-btn"
+                    onClick={() => navigate("/client/reclamation/creer")}
+                  >
+                    <FaPlus className="btn-icon" />
+                    Créer ma première réclamation
+                  </Button>
+                </div>
+              </Card.Body>
+            </Card>
+          ) : filteredReclamations.length === 0 ? (
+            // État vide - aucun résultat après filtrage
             <Card className="empty-state-card">
               <Card.Body className="empty-state-body">
                 <div className="empty-state-content">
@@ -1316,6 +1577,7 @@ const ClientInterface = () => {
                   <h5 className="empty-state-title">Aucun résultat trouvé</h5>
                   <p className="empty-state-text">
                     Aucune réclamation ne correspond aux critères de recherche
+                    sélectionnés.
                   </p>
                   <Button
                     variant="outline-primary"
@@ -1329,6 +1591,7 @@ const ClientInterface = () => {
               </Card.Body>
             </Card>
           ) : (
+            // Grille des réclamations
             <div className="reclamations-grid">
               <Row className="g-4">
                 {paginated.map((reclamation) => (
@@ -1346,11 +1609,14 @@ const ClientInterface = () => {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="pagination-container">
+              {/* Informations de pagination */}
               <div className="pagination-info">
                 Affichage de {(page - 1) * PAGE_SIZE + 1} à{" "}
                 {Math.min(page * PAGE_SIZE, filteredReclamations.length)} sur{" "}
                 {filteredReclamations.length} résultats
               </div>
+
+              {/* Contrôles de pagination */}
               <Pagination className="custom-pagination">
                 <Pagination.First
                   onClick={() => setPage(1)}
@@ -1360,6 +1626,8 @@ const ClientInterface = () => {
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
                 />
+
+                {/* Pages numériques (affichage intelligent) */}
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                   const pageNum =
                     Math.max(1, Math.min(totalPages - 4, page - 2)) + i;
@@ -1373,6 +1641,7 @@ const ClientInterface = () => {
                     </Pagination.Item>
                   );
                 })}
+
                 <Pagination.Next
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
@@ -1387,7 +1656,11 @@ const ClientInterface = () => {
         </Container>
       </div>
 
-      {/* Profile Modal */}
+      {/* ========================================
+          MODALS
+          ======================================== */}
+
+      {/* Modal de profil */}
       <ProfileModal
         show={showProfile}
         onHide={() => setShowProfile(false)}
@@ -1395,13 +1668,13 @@ const ClientInterface = () => {
         loading={profileLoading}
       />
 
-      {/* Change Password Modal */}
+      {/* Modal de changement de mot de passe */}
       <ChangePasswordModal
         show={showChangePassword}
         onHide={() => setShowChangePassword(false)}
       />
 
-      {/* Details Modal */}
+      {/* Modal de détails de réclamation */}
       <Modal
         show={showDetails}
         onHide={() => setShowDetails(false)}
@@ -1415,9 +1688,11 @@ const ClientInterface = () => {
             Détails de la réclamation #{selectedReclamation?.id}
           </Modal.Title>
         </Modal.Header>
+
         <Modal.Body className="details-modal-body">
           {selectedReclamation && (
             <Row className="details-content g-4">
+              {/* ID de la réclamation */}
               <Col md={6}>
                 <div className="detail-item">
                   <label className="detail-label">
@@ -1427,6 +1702,8 @@ const ClientInterface = () => {
                   <div className="detail-value">#{selectedReclamation.id}</div>
                 </div>
               </Col>
+
+              {/* Type de réclamation */}
               <Col md={6}>
                 <div className="detail-item">
                   <label className="detail-label">Type de réclamation</label>
@@ -1435,6 +1712,8 @@ const ClientInterface = () => {
                   </div>
                 </div>
               </Col>
+
+              {/* Statut actuel */}
               <Col md={6}>
                 <div className="detail-item">
                   <label className="detail-label">Statut actuel</label>
@@ -1447,6 +1726,8 @@ const ClientInterface = () => {
                   </div>
                 </div>
               </Col>
+
+              {/* Date de réception */}
               <Col md={6}>
                 <div className="detail-item">
                   <label className="detail-label">
@@ -1458,6 +1739,8 @@ const ClientInterface = () => {
                   </div>
                 </div>
               </Col>
+
+              {/* Numéro de compte */}
               <Col md={6}>
                 <div className="detail-item">
                   <label className="detail-label">Numéro de compte</label>
@@ -1466,6 +1749,8 @@ const ClientInterface = () => {
                   </div>
                 </div>
               </Col>
+
+              {/* Description complète */}
               <Col xs={12}>
                 <div className="detail-item">
                   <label className="detail-label">Description</label>
@@ -1475,6 +1760,8 @@ const ClientInterface = () => {
                   </div>
                 </div>
               </Col>
+
+              {/* Pièces jointes */}
               <Col xs={12}>
                 <div className="detail-item">
                   <label className="detail-label">
