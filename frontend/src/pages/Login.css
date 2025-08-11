@@ -149,12 +149,14 @@
 
 /* Checkbox "Se souvenir du mot de passe" */
 .form-check {
+  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
 .form-check-input {
+  cursor: pointer;
   width: 18px;
   height: 18px;
   border-radius: 4px;

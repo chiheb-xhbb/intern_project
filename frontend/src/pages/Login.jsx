@@ -4,23 +4,31 @@ import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./Login.css";
 
+/**
+ * Login component - handles user authentication
+ * Supports both admin and client user types with role-based redirection
+ */
 const Login = () => {
-  // ===== ÉTATS DU COMPOSANT =====
-  const [email, setEmail] = useState(""); // Email de l'utilisateur
-  const [motDePasse, setMotDePasse] = useState(""); // Mot de passe de l'utilisateur
-  const [error, setError] = useState(""); // Message d'erreur
-  const [isLoading, setIsLoading] = useState(false); // État de chargement
-  const [showPassword, setShowPassword] = useState(false); // Visibilité du mot de passe
-  const navigate = useNavigate(); // Hook pour la navigation
+  // ===== STATE MANAGEMENT =====
+  const [email, setEmail] = useState(""); // User email input
+  const [motDePasse, setMotDePasse] = useState(""); // User password input
+  const [error, setError] = useState(""); // Error message display
+  const [isLoading, setIsLoading] = useState(false); // Loading state for form submission
+  const [showPassword, setShowPassword] = useState(false); // Password visibility toggle
+  const navigate = useNavigate(); // Navigation hook
 
-  // ===== GESTIONNAIRE DE CONNEXION =====
+  // ===== AUTHENTICATION HANDLER =====
+  /**
+   * Handles the login form submission
+   * Authenticates user and redirects based on role
+   */
   const handleLogin = async (e) => {
     e.preventDefault();
-    setIsLoading(true); // Démarrer le chargement
-    setError(""); // Réinitialiser les erreurs
+    setIsLoading(true);
+    setError("");
 
     try {
-      // Envoi de la requête de connexion
+      // Send login request to API
       const response = await axios.post("/login", {
         email,
         password: motDePasse,
@@ -28,41 +36,44 @@ const Login = () => {
 
       const user = response.data.user;
 
-      // Stockage des données utilisateur et du token
+      // Store user data and token in localStorage
       localStorage.setItem("token", response.data.access_token);
       localStorage.setItem("user", JSON.stringify(user));
 
-      // Redirection selon le rôle de l'utilisateur
+      // Redirect based on user role
       if (user.admin) {
-        navigate("/dashboard"); // Page administrateur
+        navigate("/dashboard"); // Admin dashboard
       } else if (user.client) {
-        navigate("/ClientInterface"); // Page client
+        navigate("/ClientInterface"); // Client interface
       } else {
         setError("Aucun rôle associé à ce compte.");
       }
     } catch (err) {
-      // Gestion des erreurs de connexion
+      // Handle login errors
       setError(err.response?.data?.message || "Échec de la connexion");
     } finally {
-      setIsLoading(false); // Arrêter le chargement
+      setIsLoading(false);
     }
   };
 
-  // ===== BASCULEMENT DE LA VISIBILITÉ DU MOT DE PASSE =====
+  // ===== PASSWORD VISIBILITY TOGGLE =====
+  /**
+   * Toggles password field visibility
+   */
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
-  // ===== RENDU DU COMPOSANT =====
+  // ===== COMPONENT RENDER =====
   return (
     <section className="vh-100 login-section" id="login-section">
       <div className="container login-container">
         <div className="row login-row">
           <div className="col-12 col-md-8 col-lg-6 col-xl-5 login-col">
-            {/* Carte principale de connexion */}
+            {/* Main login card */}
             <div className="card shadow-2-strong login-card">
               <div className="card-body login-card-body">
-                {/* Logo de l'entreprise */}
+                {/* Company logo */}
                 <div className="logo-container">
                   <img
                     src="IMAGES/logo.png"
@@ -72,9 +83,9 @@ const Login = () => {
                   />
                 </div>
 
-                {/* Formulaire de connexion */}
+                {/* Login form */}
                 <form onSubmit={handleLogin}>
-                  {/* Champ Email */}
+                  {/* Email input field */}
                   <div className="form-floating mb-4">
                     <input
                       type="email"
@@ -88,7 +99,7 @@ const Login = () => {
                     <label htmlFor="typeEmailX-2">Email</label>
                   </div>
 
-                  {/* Champ Mot de passe */}
+                  {/* Password input field with visibility toggle */}
                   <div className="form-floating mb-4 password-field">
                     <input
                       type={showPassword ? "text" : "password"}
@@ -101,7 +112,7 @@ const Login = () => {
                     />
                     <label htmlFor="typePasswordX-2">Mot de passe</label>
 
-                    {/* Bouton de basculement de visibilité du mot de passe */}
+                    {/* Password visibility toggle button */}
                     <button
                       type="button"
                       className="password-toggle"
@@ -112,7 +123,7 @@ const Login = () => {
                           : "Afficher le mot de passe"
                       }
                     >
-                      {/* Icône œil barré (mot de passe visible) */}
+                      {/* Eye icon (password hidden) */}
                       {showPassword ? (
                         <svg
                           width="20"
@@ -126,7 +137,7 @@ const Login = () => {
                           <line x1="1" y1="1" x2="23" y2="23" />
                         </svg>
                       ) : (
-                        // Icône œil (mot de passe masqué)
+                        // Eye slash icon (password visible)
                         <svg
                           width="20"
                           height="20"
@@ -142,7 +153,7 @@ const Login = () => {
                     </button>
                   </div>
 
-                  {/* Options du formulaire */}
+                  {/* Form options */}
                   <div className="form-options">
                     <div className="form-check">
                       <input
@@ -156,14 +167,14 @@ const Login = () => {
                     </div>
                   </div>
 
-                  {/* Affichage des erreurs */}
+                  {/* Error message display */}
                   {error && (
                     <div className="alert alert-danger" role="alert">
                       {error}
                     </div>
                   )}
 
-                  {/* Bouton de connexion */}
+                  {/* Submit button */}
                   <button
                     className={`login-button ${isLoading ? "loading" : ""}`}
                     type="submit"
