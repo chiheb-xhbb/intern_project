@@ -16,7 +16,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         {/* Authentication Route */}
-        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<Login />} />
         
         {/* Client Routes */}
         <Route path="/ClientInterface" element={<ClientInterface />} />
