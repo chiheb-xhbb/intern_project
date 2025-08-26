@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use Illuminate\Validation\Rules\Password;
 use App\Models\Reclamation;
 use App\Models\HistoriqueReclamation;

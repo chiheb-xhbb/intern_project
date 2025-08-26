@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\CompteBancaire;
 use App\Models\Personne;
-use Illuminate\Auth\Access\Response;
 
 class CompteBancairePolicy
 {

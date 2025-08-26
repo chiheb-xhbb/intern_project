@@ -1308,7 +1308,7 @@ const ClientInterface = () => {
   const handleLogout = useCallback(() => {
     localStorage.removeItem("token");
     toast.success("Déconnexion réussie");
-    navigate("/login");
+    navigate("/");
   }, [navigate]);
 
   /**

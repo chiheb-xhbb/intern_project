@@ -1,13 +1,11 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Http\Controllers\Controller;
+
 use App\Models\Personne;
-use App\Models\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
-use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
@@ -18,12 +16,13 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
-        ]);
+        try {
+            $request->validate([
+                'email' => 'required|email',
+                'password' => 'required',
+            ]);
 
-        $personne = Personne::where('email', $request->email)->first();
+            $personne = Personne::where('email', $request->email)->first();
 
         if (!$personne || !Hash::check($request->password, $personne->mot_de_passe)) {
             return response()->json([
@@ -34,8 +33,12 @@ class AuthController extends Controller
         $deviceName = 'web-client'; // Default device name
 
         // Update last login if admin
-        if ($personne->admin) {
-            $personne->admin->update(['last_login' => now()]);
+        try {
+            if ($personne->admin) {
+                $personne->admin->update(['last_login' => now()]);
+            }
+        } catch (\Exception $e) {
+            // Admin relationship doesn't exist, continue
         }
 
         // Revoke old tokens
@@ -44,11 +47,24 @@ class AuthController extends Controller
         // Generate new token
         $token = $personne->createToken($deviceName)->plainTextToken;
 
+        // Load relationships safely
+        try {
+            $personne->load(['client', 'admin']);
+        } catch (\Exception $e) {
+            // If relationships fail to load, continue without them
+        }
+
         return response()->json([
             'access_token' => $token,
             'token_type' => 'Bearer',
-            'user' => $personne->load(['client', 'admin'])
+            'user' => $personne
         ]);
+        } catch (\Exception $e) {
+            \Log::error('Login error: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'An error occurred during login: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
 

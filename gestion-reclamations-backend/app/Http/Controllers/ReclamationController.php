@@ -85,7 +85,6 @@ class ReclamationController extends Controller
         }
 
         $validated = $request->validate($rules);
-        $rules['pieces_jointes.*'] = 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:5120';
         $reclamation = Reclamation::create([
             'client_id' => $user->admin ? $validated['client_id'] : $user->client->id,
             'admin_id' => $user->admin ? $user->admin->id : null,
@@ -96,7 +95,8 @@ class ReclamationController extends Controller
             'date_reception' => now(),
             'statut' => 'en attente',
         ]);
-        // 🟡 Ajout des pièces jointes SI PRÉSENTES
+        
+        // Add file attachments if present
         if ($request->hasFile('pieces_jointes')) {
             foreach ($request->file('pieces_jointes') as $file) {
                 $originalName = $file->getClientOriginalName();
