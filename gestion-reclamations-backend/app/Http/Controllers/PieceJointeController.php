@@ -19,7 +19,6 @@ class PieceJointeController extends Controller
      */
     public function upload(Request $request, Reclamation $reclamation)
     {
-        Gate::authorize('upload-attachment', $reclamation);
 
         $validator = Validator::make($request->all(), [
             'file' => 'required|file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:5120', // 5MB max
@@ -57,7 +56,7 @@ class PieceJointeController extends Controller
      */
     public function download(PieceJointe $pieceJointe)
     {
-        Gate::authorize('view-attachment', $pieceJointe);
+
 
         if (!Storage::disk('private')->exists($pieceJointe->fichier_url)) {
             abort(404, 'File not found');
@@ -80,7 +79,6 @@ class PieceJointeController extends Controller
      */
     public function preview(PieceJointe $pieceJointe)
     {
-        Gate::authorize('view-attachment', $pieceJointe);
 
         if (!Storage::disk('private')->exists($pieceJointe->fichier_url)) {
             abort(404, 'File not found');
@@ -103,7 +101,7 @@ class PieceJointeController extends Controller
      */
     public function destroy(PieceJointe $pieceJointe)
     {
-        Gate::authorize('delete-attachment', $pieceJointe);
+
 
         DB::transaction(function () use ($pieceJointe) {
             Storage::disk('private')->delete($pieceJointe->fichier_url);
@@ -120,7 +118,7 @@ class PieceJointeController extends Controller
      */
     public function index(Reclamation $reclamation)
     {
-        Gate::authorize('view-reclamation-attachments', $reclamation);
+
 
         return response()->json([
             'data' => $reclamation->piecesJointes()->orderBy('uploaded_at', 'desc')->get()

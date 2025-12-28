@@ -1,0 +1,74 @@
+# Root level .gitignore for the entire project
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.backup
+.env.production
+
+# IDE and Editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Dependency directories
+node_modules/
+vendor/
+
+# Build outputs
+build/
+dist/
+*.min.js
+*.min.css
+
+# Cache directories
+.cache/
+.parcel-cache/
+.npm/
+.eslintcache
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Database files
+*.sqlite
+*.sqlite3
+*.db
+
+# Laravel specific
+/storage/*.key
+/storage/pail
+/public/hot
+/public/storage
+/bootstrap/cache/*
+.phpunit.result.cache
+
+# Frontend specific
+/.pnp
+.pnp.js
+coverage/
+
